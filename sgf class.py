@@ -1,23 +1,27 @@
-#%%
 from sgfmill import sgf, sgf_moves
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+"""
+class Goboard: 
+creates a board given an sgf file provided by the GoSgf class
+can navigate through the game using methods such as previous or next
+"""
 
-class Gosgf:
+class GoBoard:
     def __init__(self, sgf_url:str):
         with open(sgf_url, 'rb') as f:
             sgf_content = f.read()
-        
-        # Loading an sgf file/ the game
+
+        # Load an sgf file/ the game
         self.sgf_game = sgf.Sgf_game.from_bytes(sgf_content)
         
-        # Extract the game moves
+        #get the game size
         self.board_size = self.sgf_game.get_size()
 
+        # Extract the game moves
         self.moves = []
-        
         for node in self.sgf_game.get_main_sequence():
             color, move = node.get_move()
             if color is not None and move is not None:
@@ -29,11 +33,10 @@ class Gosgf:
 
         #define the current number of moves initialized by the total number, and which we'll modify each time whne calling the previus or the next fucntion
         self.current_number_of_moves = self.total_number_of_moves
-        self.current_position = self.moves
         
        
        
-    # Draw the board, the board is drawn for the current/final position by default
+    # Draw the board up to a certain number of moves
     def drawBoard(self, number_of_moves_to_show : int):
         board = np.zeros((self.board_size, self.board_size))
         fig, ax = plt.subplots(figsize=(8, 8))
@@ -119,9 +122,71 @@ class Gosgf:
             self.current_number_of_moves += 1
             self.drawBoard(self.current_number_of_moves)
 
-            
     
-#using the class
-game = Gosgf('4.sgf')
-game.final_position()
-# %%
+
+            
+"""
+class GoSgf: 
+creates an sgf file given the list of moves (stones and their positions) extracted from the image recognition part
+"""
+
+class GoSgf:
+    def __init__(self, black:str, white:str, moves:list, tournament=None):
+        # define the game information
+        self.black = black
+        self.white = white
+        self.board_size = (19,19)
+        self.tournament = tournament
+
+        self.game_info = {
+            "GM" : "1", #game type, 1 for go
+            "EV" : tournament,
+            "PB" : black,
+            "PW" : white,
+            #"SZ" : f"{self.board_size[0]}",
+            #"KM" : "6.5", #komi
+            #"RU" : "Japanese" #rules used
+        }
+
+        #get the moves we collected from board recognition
+        self.moves = moves
+
+    #write the sgf file
+    def createSgf(self):
+        
+        #convert a move to SGF format
+        def add_to_sgf(move):
+            player, position = move
+            x, y = position 
+            sgf_x = chr(ord('a') + x)
+            sgf_y = chr(ord('a') + y)
+            return f";{player}[{sgf_x}{sgf_y}]"
+
+        #convert the sgf file 
+        def assembleSgf():
+            sgf_ = ''.join([add_to_sgf(move) for move in self.moves])
+            return sgf_
+        
+        sgf_moves = assembleSgf()
+        sgf_filename = f"{self.black}_{self.white}.sgf"
+        
+        with open(sgf_filename, "w") as sgf_file:
+
+            # Write game information
+            sgf_file.write("(; \n")
+            for key, value in self.game_info.items():
+                sgf_file.write(f"{key}[{value}]\n")
+            sgf_file.write("\n")
+
+            # Write stone positions
+            sgf_file.write(sgf_moves)
+
+            # End the SGF file
+            sgf_file.write(")\n")
+
+        return sgf_file, sgf_filename
+
+
+
+#moves = [("B", (3, 3)), ("W", (4, 4)), ("B", (5, 5)), ("W", (6, 6))]  # Example moves
+
