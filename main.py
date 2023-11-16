@@ -514,7 +514,6 @@ def master(frame):
 
 
 
-# %%
 def process_frames():
     global ProcessFrame
     while True:
@@ -537,8 +536,6 @@ def process_frames():
                 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break  # Break the loop if 'q' is pressed
-
-# %%
 
 model = YOLO('best8B.pt')
 
@@ -567,5 +564,3 @@ while cap.isOpened():
 cap.release()
 cv2.destroyAllWindows()
 
-
-# %%
