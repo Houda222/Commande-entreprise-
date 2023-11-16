@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 #%%
+=======
+>>>>>>> 02541445273fc8170131507c74a88b5307419396
 import math, os
 import cv2
 import numpy as np
@@ -130,21 +133,17 @@ def are_similar(line1, line2, threshold=10):
 
 def removeDuplicates(lines):
     """
-    Compare two lines and decide if they're almost the same line based on a certain threshold
+    Group similar lines and take the average of each group to keep one line per group
 
     Parameters:
     -----------
-    line1: numpy array
-        4 elements array representing the first line [x1, y1, x2, y2]
-    line2: numpy array
-        4 elements array representing the second line [x1, y1, x2, y2]
-    threshold: int
-        Smallest the difference between 2 lines (default is 10)
+    lines: list
+        list of lines to be filtered
     
     Returns:
     --------
-    bool
-        true if similar, else false    
+    numpy array
+        filtered list of lines   
     """
     grouped_lines = {}
     for line in lines:
@@ -184,6 +183,25 @@ def removeDuplicates(lines):
 
 
 def is_vertical(x1, y1, x2, y2):
+    """
+    Decide if a line is vertical or not
+
+    Parameters:
+    -----------
+    x1: float
+        The start point of the line in X direction
+    y1: float
+        The start point of the line in Y direction
+    x2: float
+        The end point of the line in X direction
+    y2: float
+        The end point of the line in Y direction
+    
+    Returns:
+    --------
+    bool
+        true if vertical, else false    
+    """
     return abs(x1 - x2) < 50 and abs(y1 - y2) > 50
 
 def intersect(line1, line2):
@@ -548,7 +566,6 @@ def master(frame):
 
 
 
-# %%
 def process_frames():
     global ProcessFrame
     while True:
@@ -571,8 +588,6 @@ def process_frames():
                 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break  # Break the loop if 'q' is pressed
-
-# %%
 
 model = YOLO('best8B.pt')
 
@@ -601,5 +616,3 @@ while cap.isOpened():
 cap.release()
 cv2.destroyAllWindows()
 
-
-# %%
