@@ -81,13 +81,10 @@ def removeDuplicates(lines):
         found = False
         for key in second_dict.keys():
             if are_similar(key, line, threshold=10):
-                # print("key, element", key, line)
                 second_dict[key] = second_dict[key] + [line]
                 found = True
                 break
-        # if not found:
-        #     grouped_lines[(x1, y1, x2, y2)] = [line]
-    
+            
     final_lines = []
     for key in second_dict.keys():
         mean_line = np.mean(second_dict[key], axis=0).astype(dtype=int)
@@ -129,7 +126,6 @@ def clean_lines(lines, image_width, image_height):
         lines[i] = interpolate(*lines[i], image_width, image_height)
         
     lines = adress_lines(lines)
-    # print("clean", lines.shape)
     return  removeDuplicates(lines)
 
 def get_angles(lines):
@@ -160,9 +156,7 @@ def cluster_orientation(lines):
 
 def create_board(intersections, board_size=(19,19)):
     cleaned_intersections = intersections.tolist()
- 
-    
-    
+        
     cleaned_intersections.sort(key=lambda x: (x[1], x[0]))
     
     board = {}
@@ -196,8 +190,6 @@ def define_moves(white_stones_transf, black_stones_transf, transformed_intersect
     Board = create_board(transformed_intersections)
     transformed_intersections = np.array(list(Board.keys()))
     moves = []
-    
-    # print(Board)
 
     for stone in white_stones_transf:
         
@@ -284,8 +276,6 @@ def restore_missing_lines(lines, distance_threshold=10):
     lines = np.sort(lines, axis=0)
     
     return lines
-
-###################
 
 
 def non_max_suppression(boxes, overlapThresh=0.5):
@@ -375,20 +365,12 @@ def model_processing(model_results, perspective_matrix, frame):
     cluster_vertical = []
     i = 0
     for label in unique_labels:
-        # print(all_intersections_x[cluster_labels==label])
-        # plt.scatter(np.arange(len(all_intersections_x[cluster_labels==label])), all_intersections_x[cluster_labels==label])
-        # draw_points(all_intersections[cluster_labels==label].astype(dtype=int), frame, colors[i])
-        # i += 1
         line = all_intersections[cluster_labels==label]
-        # print("1",line)
         line = line[np.argsort(line[:, 1])]
-        # print("2",line)
         first_endpoint = line[0]
         last_endpoint = line[-1]
         line = interpolate(*first_endpoint, *last_endpoint)
-        # print("3",line)
         cluster_vertical.append(line)
-        # print(cluster_vertical)
         
     all_intersections_y = all_intersections[:,1].reshape((-1, 1))
     
@@ -414,51 +396,33 @@ def model_processing(model_results, perspective_matrix, frame):
     
 
 def master(frame):
-    global model, results, white_stones_transf, transformed_image, perspective_matrix, all_intersections, cluster_2, cluster_1
     results = model(frame)
     
-    cv2.imwrite("results/frame.jpg", frame)
-    annotated_frame = results[0].plot(labels=False, conf=False)
-    cv2.imwrite("results/annotated.jpg", annotated_frame)
-    
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
-    
-    # print("into non max")
+
     corner_boxes = non_max_suppression(corner_boxes)
-    
-    # print(corner_boxes)
+
     if len(corner_boxes) != 4:
-        raise Exception(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
+        raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
 
-    
     corner_centers = ((corner_boxes[:,[0, 1]] + corner_boxes[:,[2, 3]])/2)
-
-
     
-    # corners = corner_centers.tolist()
-    corners = corner_centers
+    corner_centers = corner_centers[corner_centers[:, 1].argsort()]
     
- 
-    corners = corners[corners[:, 1].argsort()]
-    
-    upper = corners[:2]
-    lower = corners[2:]
+    upper = corner_centers[:2]
+    lower = corner_centers[2:]
     
     upper = upper[upper[:, 0].argsort()]
     lower = lower[lower[:, 0].argsort()[::-1]]
     
-    corners = np.concatenate((upper, lower))
+    input_points = np.concatenate((upper, lower)).astype(dtype=np.float32)
 
-    input_points = np.array(corners, dtype=np.float32)
-
-    output_edge = 600 # square of 600 by 600
+    output_edge = 600
     output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
 
     perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
 
     transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
-    # imshow_(transformed_image)
-    cv2.imwrite("results/transformed_image.jpg", transformed_image)
     
     vertical_lines, horizontal_lines = model_processing(results, perspective_matrix, transformed_image)
     
@@ -474,33 +438,23 @@ def master(frame):
     black_stones_transf = black_stones_transf[(black_stones_transf[:, 0:2] >= 0).all(axis=1) & (black_stones_transf[:, 0:2] <= output_edge).all(axis=1)]
     white_stones_transf = white_stones_transf[(white_stones_transf[:, 0:2] >= 0).all(axis=1) & (white_stones_transf[:, 0:2] <= output_edge).all(axis=1)]
     
-        
-   
+       
     cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
     cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
     
-
     
-    cv2.imwrite("results/transformed_image.jpg", transformed_image)
- 
-
     intersections = detect_intersections(cluster_1, cluster_2, transformed_image)
     
     if len(intersections) == 0:
-        raise Exception(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>No intersection were found!")
-    
-    print(6)
+        raise Exception(">>>>>No intersection were found!")
+
     moves = define_moves(white_stones_transf, black_stones_transf, intersections)
 
-    
     sgf_ = GoSgf('a', 'b', moves)
-    sgf_f, sgf_n = sgf_.createSgf()
+    _, sgf_n = sgf_.createSgf()
     
     board = GoBoard(sgf_n)
-    cv2.imwrite("results/final.jpg", board.final_position())
-    
-    # return transformed_image
-    return board.final_position()
+    return board.final_position(), sgf_n
 
 
 
@@ -508,20 +462,15 @@ def master(frame):
 def process_frames():
     global ProcessFrame
     while True:
-        # if queue.not_empty:
         if not ProcessFrame is None:
-            # frame = queue.get()  # Get a frame from the queue
             try:
-                # frame = cv2.imread("frame.jpg")
-                cv2.imshow("master", master(ProcessFrame))
-                    # Load the saved image using OpenCV
-                # image = cv2.imread("result_image.jpg")
                 
-                # results = model(frame)
-                # cv2.imshow("Result Image", results[0].plot(labels=False, conf=False))
-
-                # # Display the image using OpenCV
-                # cv2.imshow("Result Image", image) # Process the frame
+                ############ WA SMA3NI MZZZZN DB.  game_plot HYA LA VARIABLE LLI FIHA L'IMAGE DESSINé
+                ############ B LE CODE DYAL HOUDA;
+                ############ O sgf_filename HOWA LE NOM DYAL LE FICHER SGF LLI T ENREGISTRA 
+                ############ QUI CORRESPOND A game_plot
+                game_plot, sgf_filename = master(ProcessFrame)
+                cv2.imshow("master", game_plot)
                 
             except OverflowError as e:
                 print(f"Overflow Error: {e}")
@@ -529,7 +478,7 @@ def process_frames():
             except Exception as e:
                 print('empty frame', type(e), e.args, e)
                 traceback.print_exc()
-            # cv2.imshow('Processed Stream', cv2.flip(frame, 1))  # Display the processed frame
+                
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break  # Break the loop if 'q' is pressed
 
@@ -542,120 +491,17 @@ ProcessFrame = None
 process_thread = threading.Thread(target=process_frames, args=())
 process_thread.start()
 
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW) # 0 for the default camera, change it if needed
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
-    # frame_queue.put(frame)
-    # image, gray = get_blurred_img(frame)
-
-    # canny = Canny_(gray)
     
+    ########################## frame HYA LA VARIABLE LLI FIHA CHAQUE IMAGE DYAL STREAM
+    ########################## YA3NI LE FLUX DE VIDEO QUI DOIT ETRE STREAMé
     ProcessFrame = copy.deepcopy(frame)
-    # try:
-    #     results = model(frame)
-    #     annotated_frame = results[0].plot(labels=False, conf=False)
-    #     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
-    #     corner_boxes = non_max_suppression(corner_boxes)
-    #     corner_centers = ((corner_boxes[:,[0, 1]] + corner_boxes[:,[2, 3]])/2)
-    #     corners = corner_centers.tolist()
-    #     corners.sort(key=lambda x: x[1])
-    #     upper = corners[:2]
-    #     lower = corners[2:]
-    #     upper.sort(key=lambda x: x[0])
-    #     lower.sort(key=lambda x: x[0], reverse=True)
-    #     corners = upper + lower
-
-    #     input_points = np.array(corners, dtype=np.float32)
-    #     output_edge = 600
-    #     output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
-    #     perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
-        
-    #     transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
-    #     annotated_frame = cv2.warpPerspective(annotated_frame, perspective_matrix, (output_edge, output_edge))
-       
-        
-    #     # black_stones = results[0].boxes.xywh[results[0].boxes.cls == 0]
-    #     # white_stones = results[0].boxes.xywh[results[0].boxes.cls == 6]
-
-    #     # black_stones = np.array(black_stones[:, [0, 1]])
-    #     # white_stones = np.array(white_stones[:, [0, 1]])
-
-    #     # black_stones_transf = cv2.perspectiveTransform(black_stones.reshape((1, -1, 2)), perspective_matrix).reshape((-1, 2))
-    #     # white_stones_transf = cv2.perspectiveTransform(white_stones.reshape((1, -1, 2)), perspective_matrix).reshape((-1, 2))
-
-    #     # black_stones_transf = black_stones_transf[(black_stones_transf[:, 0:2] >= 0).all(axis=1) & (black_stones_transf[:, 0:2] <= output_edge).all(axis=1)]
-    #     # white_stones_transf = white_stones_transf[(white_stones_transf[:, 0:2] >= 0).all(axis=1) & (white_stones_transf[:, 0:2] <= output_edge).all(axis=1)]
- 
-    #     # # # cv2.imwrite("frame.jpg", frame)
-    #     # image, gray = get_blurred_img(transformed_image)
-
-    #     # canny = cv2.warpPerspective(canny, perspective_matrix, (output_edge, output_edge))
-    #     # lines_, img = HoughLinesP_(canny, image)
-    #     # clean_lines_img = np.zeros_like(image)
-    #     # clusters_img = np.copy(image)
-    #     # clusters_img2 = np.copy(image)
     
-    
-    
-        
-    #     # lines = clean_lines(lines_.squeeze(), image_width=frame.shape[1], image_height=frame.shape[0])
-    #     # # print(lines.squeeze())
-    #     # for line in lines:
-    #     #     x1, y1, x2, y2 = line
-    #     #     cv2.line(clean_lines_img, (x1, y1), (x2, y2), (0, 0, 255), 1)
-        
-        
-    #     # cluster_1, cluster_2 = cluster_orientation(lines)
-        
-    #     # for line in cluster_1:
-    #     #     x1, y1, x2, y2 = line
-    #     #     cv2.line(clusters_img, (x1, y1), (x2, y2), (0, 255, 0), 1)
-            
-    #     # for line in cluster_2:
-    #     #     x1, y1, x2, y2 = line
-    #     #     cv2.line(clusters_img, (x1, y1), (x2, y2), (0, 0, 255), 1)
-            
-    #     # if len(cluster_1) > 1:
-    #     #     cluster_1 = restore_missing_lines(cluster_1)
-
-    #     # if len(cluster_2) > 1:
-    #     #     cluster_2 = restore_missing_lines(cluster_2)
-            
-    #     # for line in cluster_1:
-    #     #     x1, y1, x2, y2 = line
-    #     #     cv2.line(clusters_img2, (x1, y1), (x2, y2), (0, 255, 0), 1)
-            
-    #     # for line in cluster_2:
-    #     #     x1, y1, x2, y2 = line
-    #     #     cv2.line(clusters_img2, (x1, y1), (x2, y2), (0, 0, 255), 1)
-        
-    #     # print("lines processed")
-        
-    #     # intersections = detect_intersections(cluster_1, cluster_2, gray)
-    #     # moves = define_moves(white_stones_transf, black_stones_transf, intersections)
-    #     # sgf_ = GoSgf('a', 'b', moves)
-    #     # sgf_f, sgf_n = sgf_.createSgf()
-    #     # board = GoBoard(sgf_n)
-        
-    #     # cv2.imshow('Final rendering', board.final_position())
-        
-        
-
-    #     # cv2.imshow('hough', img)
-    #     # cv2.imshow('clean lines', clean_lines_img)
-    #     # cv2.imshow('clustering', clusters_img)
-    #     # cv2.imshow('clustering with missing lines', clusters_img)
-    #     # cv2.imshow('Transformed image', transformed_image)
-    #     cv2.imshow('annotated image', annotated_frame)
-        
-            
-    # except Exception as e:
-    #     traceback.print_exc()
-
-    # cv2.imshow('canny', canny)
     cv2.imshow('Video Stream', frame)
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
