@@ -289,6 +289,27 @@ class GoSgf:
             sgf_file.write(")\n")
 
         return sgf_file, sgf_filename
+    # def manually_add_a_move(self, move):
+    #     """
+    #     Add a move to the sgf file
+
+    #     Returns:
+    #     --------
+    #     str
+    #         one move composed of the player, the x coordinate, and the y coordinate
+    #     """
+    #     self.moves.append(move)
+    #     for move in self.moves:
+    #         player, position = move
+    #         x, y = position 
+    #         sgf_x = chr(ord('a') + x)
+    #         sgf_y = chr(ord('a') + y)
+    #         to_add =  f";{player}[{sgf_x}{sgf_y}]"
+    #         sgf_ = ''.join([add_to_sgf(move) for move in self.moves])
+
+    # def delete_a_move(self, move):
+    
+        
 
 
 #functions to find the new move played and append it to the list
@@ -331,13 +352,14 @@ def update_moves(old_moves, new_moves):
 
 
 
-#%%
-moves = [('W', (9, 9)), ('W', (14, 18)), ('W', (14, 17)), ('W', (13, 17)), ('W', (3, 15)), ('W', (6, 15)), ('W', (14, 15)), ('W', (0, 14)), ('W', (14, 13)), ('W', (13, 13)), ('W', (0, 10)), ('W', (9, 9)), ('W', (10, 9)), ('W', (11, 9)), ('W', (12, 9)), ('W', (14, 9)), ('W', (18, 9)), ('W', (14, 8)), ('W', (14, 7)), ('W', (4, 8)), ('W', (4, 7)), ('W', (1, 7)), ('W', (1, 6)), ('W', (2, 7)), ('W', (2, 6)), ('W', (3, 7)), ('W', (3, 6)), ('W', (4, 7)), ('W', (4, 6)), ('W', (17, 6)), ('W', (17, 5)), ('W', (10, 6)), ('W', (10, 5)), ('W', (17, 5)), ('W', (17, 4)), ('W', (7, 4)), ('W', (7, 3)), ('W', (4, 3)), ('W', (9, 1)), ('W', (18, 1)), ('W', (7, 1)), ('W', (8, 1)), ('W', (14, 1)), ('W', (16, 1)), ('W', (17, 1)), ('W', (0, 1)), ('W', (1, 1))]
-fichier = GoSgf("ex", "ex", moves)
-fichier.createSgf()
-# %%
-board = GoBoard("ex_ex.sgf")
-res = board.final_position()
+# #%%
+# ####example
+# moves = [('B', (9, 9)), ('W', (14, 18)), ('B', (14, 17)), ('W', (13, 17)), ('B', (3, 15)), ('W', (6, 15)), ('B', (14, 15)), ('W', (0, 14)), ('B', (14, 13)), ('W', (13, 13)), ('B', (0, 10)), ('W', (9, 9)), ('B', (10, 9)), ('W', (11, 9))]
+# fichier = GoSgf("ex", "ex", moves)
+# sgf_file, sgf_filename = fichier.createSgf()
+
+# board = GoBoard("sgf_filename")
+# res = board.final_position()
 # imshow_(res)# %%
 
 # %%
