@@ -13,7 +13,7 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     """
     Stretch a line to fit the whole image using the line equation y = slope * x + b
 
-    Parameters:
+    Args:
     -----------
     x1: float
         The start point of the line in X direction
@@ -59,7 +59,7 @@ def line_equation(x1, y1, x2, y2):
     """
     Calculate the slope and the intercept b in the line equation y = slope * x + b
 
-    Parameters:
+    Args:
     -----------
     x1: float
         The start point of the line in X direction
@@ -90,7 +90,7 @@ def adress_lines(lines):
     """
     Sort the order of endpoints
 
-    Parameters:
+    Args:
     -----------
     lines: list
         list of lines unsorted
@@ -111,7 +111,7 @@ def are_similar(line1, line2, threshold=10):
     """
     Compare two lines and decide if they're almost the same line based on a certain threshold
 
-    Parameters:
+    Args:
     -----------
     line1: numpy array
         4 elements array representing the first line [x1, y1, x2, y2]
@@ -132,7 +132,7 @@ def removeDuplicates(lines):
     """
     Group similar lines and take the average of each group to keep one line per group
 
-    Parameters:
+    Args:
     -----------
     lines: list
         list of lines to be filtered
@@ -183,7 +183,7 @@ def is_vertical(x1, y1, x2, y2):
     """
     Decide if a line is vertical or not
 
-    Parameters:
+    Args:
     -----------
     x1: float
         The start point of the line in X direction
@@ -202,6 +202,21 @@ def is_vertical(x1, y1, x2, y2):
     return abs(x1 - x2) < 50 and abs(y1 - y2) > 50
 
 def intersect(line1, line2):
+    """
+    Find the intersection of 2 lines
+
+    Args:
+    -----------
+    line1: list
+        list of start point x, start point y, end point x, end point y
+    line2: list
+        list of start point x, start point y, end point x, end point y
+
+    Returns:
+    --------
+    numpy array
+        x and y coordinates of the intersection    
+    """
     slope1, b1 = line_equation(*line1)
     slope2, b2 = line_equation(*line2)
     if slope1 == float('Inf'):
@@ -216,7 +231,25 @@ def intersect(line1, line2):
     return np.array([int(np.round(x)), int(np.round(y))])
 
 def get_angle(x1, y1, x2, y2):
-    # return angle in radian
+    """
+    Calculate the angle in radian of the segment in the trigonometric circle
+
+    Args:
+    -----------
+    x1: float
+        The start point of the line in X direction
+    y1: float
+        The start point of the line in Y direction
+    x2: float
+        The end point of the line in X direction
+    y2: float
+        The end point of the line in Y direction
+
+    Returns:
+    --------
+    float
+        Angle in radians
+    """
     if x1 != x2:
         angle = np.arctan((y2 - y1)/(x2 - x1))
     else:
@@ -225,21 +258,69 @@ def get_angle(x1, y1, x2, y2):
 
 
 def clean_lines(lines, image_width, image_height):
+    """
+    Clean lines by removing duplicates and stretching short lines
+
+    Args:
+    -----------
+    lines: numpy array
+        List of lines to be cleaned
+    image_width: int
+        width of the image
+    image_height: int
+
+    Returns:
+    --------
+    numpy array
+        filtered list of lines   
+    """   
+
     global image
     
     for i in range(len(lines)):
         lines[i] = interpolate(*lines[i], image_width, image_height)
         
     lines = adress_lines(lines)
-    return  removeDuplicates(lines)
+    return removeDuplicates(lines)
 
 def get_angles(lines):
+    """
+    Calculate the angle in radian for each line
+
+    Args:
+    -----------
+    lines: list
+        List of lines of which we calculate the angles
+
+    Returns:
+    --------
+    numpy array
+        List of angles in radians
+    """
+
     lines_angles = np.zeros((lines.shape[0], 1))
     for i in range(len(lines)):
         lines_angles[i] = get_angle(*lines[i])
     return lines_angles
 
 def cluster_orientation(lines):
+    """
+    Classify lines into horizontal and vertical lines using Kmeans clustering algorithm
+
+    Args:
+    -----------
+    lines: list
+        list of lines to be classified
+
+    Returns:
+    --------
+    list
+        horizontal or vertical lines
+    list
+        horizontal if first list is vertical, else vertical
+        
+    """
+
     lines_angles = get_angles(lines)
     
     stretched_angles = lines_angles * 2
@@ -260,8 +341,24 @@ def cluster_orientation(lines):
     return cluster_1, cluster_2
 
 def create_board(intersections, board_size=(19,19)):
-    cleaned_intersections = intersections.tolist()
+    """
+    Set up the board with 19x19=361 intersections 
+
+    Args:
+    -----------
+    intersections: numpy array
+        List of found and interpolated intersections
+    board_size:
+        Size of the board (default is 19x19)
+
+    Returns:
+    --------
+    dict
+        The board, in which each key correponds to an intersection and its value represents its coordinate on the board
         
+    """
+
+    cleaned_intersections = intersections.tolist()
     cleaned_intersections.sort(key=lambda x: (x[1], x[0]))
     
     board = {}
