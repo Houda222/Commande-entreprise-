@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 #%%
-=======
->>>>>>> 2bde6cc4ab4d38a8f37b71600ceb020b28889792
 import math, os
 import cv2
 import numpy as np
@@ -35,8 +32,8 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     --------
     numpy array
         new calculated endpoints 
-    
     """
+
     slope, b = line_equation(x1, y1, x2, y2)
     if slope == float('Inf'):
         new_endpoints = np.array([x1, 0, x1, image_height], dtype=np.uint32)
@@ -79,7 +76,6 @@ def line_equation(x1, y1, x2, y2):
         slope of the line
     float 
         intercept of the line 
-    
     """
     if x1 == x2:
         "if slope is infinite , y = x1 = c"
@@ -112,10 +108,44 @@ def adress_lines(lines):
     return lines
 
 def are_similar(line1, line2, threshold=10):
+    """
+    Compare two lines and decide if they're almost the same line based on a certain threshold
+
+    Parameters:
+    -----------
+    line1: numpy array
+        4 elements array representing the first line [x1, y1, x2, y2]
+    line2: numpy array
+        4 elements array representing the second line [x1, y1, x2, y2]
+    threshold: int
+        Smallest the difference between 2 lines (default is 10)
+    
+    Returns:
+    --------
+    bool
+        true if similar, else false    
+    """
     return np.all(np.abs(line1 - line2) <= threshold)
 
 
 def removeDuplicates(lines):
+    """
+    Compare two lines and decide if they're almost the same line based on a certain threshold
+
+    Parameters:
+    -----------
+    line1: numpy array
+        4 elements array representing the first line [x1, y1, x2, y2]
+    line2: numpy array
+        4 elements array representing the second line [x1, y1, x2, y2]
+    threshold: int
+        Smallest the difference between 2 lines (default is 10)
+    
+    Returns:
+    --------
+    bool
+        true if similar, else false    
+    """
     grouped_lines = {}
     for line in lines:
         x1, y1, x2, y2 = line
