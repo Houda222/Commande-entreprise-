@@ -205,6 +205,18 @@ def is_vertical(x1, y1, x2, y2):
     return abs(x1 - x2) < 50 and abs(y1 - y2) > 50
 
 def intersect(line1, line2):
+    """
+    Find the intersection of 2 lines
+
+    Parameters:
+    -----------
+    line1:
+    
+    Returns:
+    --------
+    bool
+        true if vertical, else false    
+    """
     slope1, b1 = line_equation(*line1)
     slope2, b2 = line_equation(*line2)
     if slope1 == float('Inf'):
