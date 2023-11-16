@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-#%%
-=======
->>>>>>> 2bde6cc4ab4d38a8f37b71600ceb020b28889792
 import math, os
 import cv2
 import numpy as np
