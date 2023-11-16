@@ -210,7 +210,12 @@ def intersect(line1, line2):
 
     Parameters:
     -----------
-    line1:
+    line1: list
+        list of start point x, start point y, end point x, end point y
+    line2: list
+        list of start point x, start point y, end point x, end point y
+
+
     
     Returns:
     --------
