@@ -1,4 +1,3 @@
-
 import math, os
 import cv2
 import numpy as np
@@ -13,9 +12,9 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     "y = slope * x + b"
     slope, b = line_equation(x1, y1, x2, y2)
     if slope == float('Inf'):
-        final_bounds = np.array([x1, 0, x1, image_height], dtype=np.uint32)
+        new_endpoints = np.array([x1, 0, x1, image_height], dtype=np.uint32)
     elif slope == 0:
-        final_bounds = np.array([0, y1, image_width, y1], dtype=np.uint32)
+        new_endpoints = np.array([0, y1, image_width, y1], dtype=np.uint32)
     else:
         left_bound = (0, np.round(b))
         right_bound = (image_width, np.round(slope * image_width + b))
@@ -23,14 +22,14 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
         lower_bound = (np.round((image_height - b) / slope), image_height)
         possible_bounds = {left_bound, right_bound, upper_bound, lower_bound}
 
-        final_bounds = np.array([], dtype=np.uint32)
+        new_endpoints = np.array([], dtype=np.uint32)
         for bound in possible_bounds:
             x, y = bound
             if x > image_width or x < 0 or y < 0 or y > image_height:
                 continue
-            final_bounds = np.append(final_bounds, (x, y))
+            new_endpoints = np.append(new_endpoints, (x, y))
 
-    return final_bounds
+    return new_endpoints
 
 def line_equation(x1, y1, x2, y2):
     if x1 == x2:
