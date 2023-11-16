@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#%%
-=======
->>>>>>> 02541445273fc8170131507c74a88b5307419396
+
 import math, os
 import cv2
 import numpy as np
@@ -279,6 +276,23 @@ def create_board(intersections, board_size=(19,19)):
     return board
 
 def detect_intersections(cluster_1, cluster_2, image):
+    """
+    Detect intersections between vertical and horizontal line clusters.
+
+    Parameters:
+    -----------
+    cluster_1 : numpy.ndarray
+                Array of vertical lines represented by coordinates [x1, y1, x2, y2].
+    cluster_2 : numpy.ndarray
+                Array of horizontal lines represented by coordinates [x1, y1, x2, y2].
+    image : numpy.ndarray
+            Image array to define the boundary for intersection points.
+
+    Returns:
+    --------
+    numpy.ndarray
+        Array of intersection points between vertical and horizontal line clusters.
+    """
     intersections = []
     
     for v_line in cluster_1:
@@ -293,15 +307,30 @@ def detect_intersections(cluster_1, cluster_2, image):
 
     
 def define_moves(white_stones_transf, black_stones_transf, transformed_intersections):
-    global transformed_image
+    """
+    Define game moves based on the positions of white and black stones.
+
+    Parameters:
+    -----------
+    white_stones_transf : numpy.ndarray
+                          Array of coordinates representing transformed positions of white stones.
+    black_stones_transf : numpy.ndarray
+                          Array of coordinates representing transformed positions of black stones.
+    transformed_intersections : numpy.ndarray
+                                Array of perspective transformed intersection coordinates.
+
+    Returns:
+    --------
+    list : python list
+        List of moves, where each move is a tuple containing a color ('W' for white or 'B' for black)
+        and the corresponding board position.
+    """
     
     Board = create_board(transformed_intersections)
     transformed_intersections = np.array(list(Board.keys()))
     moves = []
 
     for stone in white_stones_transf:
-        
-        
         nearest_corner = None
         closest_distance = 100000
         for inter in transformed_intersections:
@@ -310,10 +339,9 @@ def define_moves(white_stones_transf, black_stones_transf, transformed_intersect
                 nearest_corner = tuple(inter)
                 closest_distance = distance
         moves.append(("W", (Board[nearest_corner][0], 18 - Board[nearest_corner][1])))
+          
             
     for stone in black_stones_transf:
-        
-        
         nearest_corner = None
         closest_distance = 100000
         for inter in transformed_intersections:
@@ -326,12 +354,44 @@ def define_moves(white_stones_transf, black_stones_transf, transformed_intersect
     return moves
 
 def calculate_distances(lines):
+    """
+    Calculate distances between consecutive lines.
+
+    Parameters:
+    -----------
+    lines : numpy.ndarray
+            Array of lines represented by coordinates [x1, y1, x2, y2].
+
+    Returns:
+    --------
+    list : numpy.ndarray
+            List of distances between consecutive lines.
+    """
     distances = [(np.linalg.norm(lines[i + 1][:2]-lines[i][:2]) + np.linalg.norm(lines[i + 1][2:]-lines[i][2:])) / 2 for i in range(len(lines) - 1)]
     return distances
 
 def find_common_distance(distances, target_distance=30):
+    """
+    Find the common distance among a set of distances using DBSCAN clustering.
+
+    Parameters:
+    -----------
+    distances : list
+                List of distances to be clustered and analyzed.
+    target_distance : float, optional
+                      The target distance to find among the clusters (default=30).
+
+    Returns:
+    --------
+    Tuple
+        Tuple containing the mean of the distances in the cluster with the target distance
+        and the distances in that cluster.
+    """
+    
+    # Reshape distances into a column vector
     distances_ = np.array(distances).reshape((-1, 1))
 
+    # Apply DBSCAN clustering
     dbscan = DBSCAN(eps=1, min_samples=1)
     labels = dbscan.fit_predict(distances_)
     
@@ -339,23 +399,62 @@ def find_common_distance(distances, target_distance=30):
     unique_labels = np.unique(labels)
     label_index = np.array([])
     
+    # Calculate means for each cluster and store label and mean in arrays
     for label in unique_labels:
         means = np.append(means, np.mean(distances_[labels==label]))
         label_index = np.append(label_index, label)
 
+    # Find the index of the cluster with the closest mean to the target distance
     index = np.argmin(np.abs(means - target_distance))
     
+    # Return the mean of distances in the chosen cluster and the distances in that cluster
     return means[index], distances_[labels==label_index[index]]
 
 def is_approx_multiple(value, base, threshold):
+    """
+    Check if a value is approximately a multiple of a given base within a specified threshold.
+
+    Parameters:
+    -----------
+    value : float
+            The value to check.
+    base : float
+           The base value for which the check is performed.
+    threshold : float
+                The maximum allowed deviation from being a multiple.
+
+    Returns:
+    --------
+    bool
+        True if the value is approximately a multiple of the base within the threshold, False otherwise.
+    """
     return abs(value - round(value / base) * base) < threshold
 
 def restore_missing_lines(lines, distance_threshold=10):
+    """
+    Restore missing lines in a set of lines based on a common distance.
+
+    Parameters:
+    -----------
+    lines : numpy.ndarray of shape (-1, 4)
+            Array of lines represented by coordinates [x1, y1, x2, y2].
+    distance_threshold : int, optional
+                        Maximum threshold for spacing deviation to consider missing lines (default=10).
+
+    Returns:
+    --------
+    numpy.ndarray
+        Array of lines with restored missing lines.
+    """
     # ax=0 : x axis / ax=1 : y axis
     lines = np.sort(lines, axis=0)
     distances = calculate_distances(lines)
+    
+    # If there are less than or equal to 1 distance, no restoration needed
     if len(distances) <= 1:
         return lines
+    
+    # Find mean distance and distances array after removing outliers
     mean_distance, distances = find_common_distance(distances)
     restored_lines = []
     
@@ -378,65 +477,97 @@ def restore_missing_lines(lines, distance_threshold=10):
                     y2 = lines[i][3] + j * mean_distance
                 restored_lines.append([x1, y1, x2, y2])
     
-
+    # Append the restored lines to the original lines array
     if len(restored_lines) != 0:
         lines = np.append(lines, np.array(restored_lines, dtype=int), axis=0)
+    
+    # Sort the lines array
     lines = np.sort(lines, axis=0)
     
     return lines
 
 
 def non_max_suppression(boxes, overlapThresh=0.5):
-	# if there are no boxes, return an empty list
-	if len(boxes) == 0:
-		return []
-	# if the bounding boxes integers, convert them to floats --
-	# this is important since we'll be doing a bunch of divisions
-	if boxes.dtype.kind == "i":
-		boxes = boxes.astype("float")
-	# initialize the list of picked indexes	
-	pick = []
-	# grab the coordinates of the bounding boxes
-	x1 = boxes[:,0]
-	y1 = boxes[:,1]
-	x2 = boxes[:,2]
-	y2 = boxes[:,3]
-	# compute the area of the bounding boxes and sort the bounding
-	# boxes by the bottom-right y-coordinate of the bounding box
-	area = (x2 - x1 + 1) * (y2 - y1 + 1)
-	idxs = np.argsort(y2)
-	# keep looping while some indexes still remain in the indexes
-	# list
-	while len(idxs) > 0:
-		# grab the last index in the indexes list and add the
-		# index value to the list of picked indexes
-		last = len(idxs) - 1
-		i = idxs[last]
-		pick.append(i)
-		# find the largest (x, y) coordinates for the start of
-		# the bounding box and the smallest (x, y) coordinates
-		# for the end of the bounding box
-		xx1 = np.maximum(x1[i], x1[idxs[:last]])
-		yy1 = np.maximum(y1[i], y1[idxs[:last]])
-		xx2 = np.minimum(x2[i], x2[idxs[:last]])
-		yy2 = np.minimum(y2[i], y2[idxs[:last]])
-		# compute the width and height of the bounding box
-		w = np.maximum(0, xx2 - xx1 + 1)
-		h = np.maximum(0, yy2 - yy1 + 1)
-		# compute the ratio of overlap
-		overlap = (w * h) / area[idxs[:last]]
-		# delete all indexes from the index list that have
-		idxs = np.delete(idxs, np.concatenate(([last],
-			np.where(overlap > overlapThresh)[0])))
-	# return only the bounding boxes that were picked using the
-	# integer data type
-	return boxes[pick].astype("int")
+    """
+    Apply non-maximum suppression to eliminate redundant bounding boxes.
+
+    Parameters:
+    -----------
+    boxes : numpy.ndarray
+            Array of bounding boxes with coordinates [x1, y1, x2, y2].
+    overlapThresh : float, optional
+                    Threshold for overlap to consider bounding boxes as redundant (default=0.5).
+
+    Returns:
+    --------
+    numpy.ndarray
+        Array of picked bounding boxes after non-maximum suppression.
+    """
+    
+    # if there are no boxes, return an empty list
+    if len(boxes) == 0:
+        return []
+    # if the bounding boxes integers, convert them to floats --
+    # this is important since we'll be doing a bunch of divisions
+    if boxes.dtype.kind == "i":
+        boxes = boxes.astype("float")
+    # initialize the list of picked indexes	
+    pick = []
+    # grab the coordinates of the bounding boxes
+    x1 = boxes[:,0]
+    y1 = boxes[:,1]
+    x2 = boxes[:,2]
+    y2 = boxes[:,3]
+    # compute the area of the bounding boxes and sort the bounding
+    # boxes by the bottom-right y-coordinate of the bounding box
+    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    idxs = np.argsort(y2)
+    # keep looping while some indexes still remain in the indexes
+    # list
+    while len(idxs) > 0:
+        # grab the last index in the indexes list and add the
+        # index value to the list of picked indexes
+        last = len(idxs) - 1
+        i = idxs[last]
+        pick.append(i)
+        # find the largest (x, y) coordinates for the start of
+        # the bounding box and the smallest (x, y) coordinates
+        # for the end of the bounding box
+        xx1 = np.maximum(x1[i], x1[idxs[:last]])
+        yy1 = np.maximum(y1[i], y1[idxs[:last]])
+        xx2 = np.minimum(x2[i], x2[idxs[:last]])
+        yy2 = np.minimum(y2[i], y2[idxs[:last]])
+        # compute the width and height of the bounding box
+        w = np.maximum(0, xx2 - xx1 + 1)
+        h = np.maximum(0, yy2 - yy1 + 1)
+        # compute the ratio of overlap
+        overlap = (w * h) / area[idxs[:last]]
+        # delete all indexes from the index list that have
+        idxs = np.delete(idxs, np.concatenate(([last],
+            np.where(overlap > overlapThresh)[0])))
+    # return only the bounding boxes that were picked using the
+    # integer data type
+    return boxes[pick].astype("int")
 
 
 
-def model_processing(model_results, perspective_matrix, frame):
+def model_processing(model_results, perspective_matrix):
+    """
+    Process model results to identify and cluster all intersections.
+
+    Parameters:
+    -----------
+    model_results : numpy.ndarray
+                    List of model results containing information about boxes.
+    perspective_matrix : numpy.ndarray
+                    Perspective transformation matrix
+    
+    Returns:
+    --------
+    Tuple of two numpy arrays representing clustered vertical and horizontal lines.
+    """
+
     global cluster_vertical, cluster_horizontal, all_intersections, empty_intersections, empty_corner, empty_edge
-    from matplotlib import pyplot as plt
     
     empty_intersections = model_results[0].boxes.xywh[model_results[0].boxes.cls == 3][:,[0, 1]]
     empty_corner = model_results[0].boxes.xywh[model_results[0].boxes.cls == 4][:,[0, 1]]
@@ -532,7 +663,7 @@ def master(frame):
 
     transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
     
-    vertical_lines, horizontal_lines = model_processing(results, perspective_matrix, transformed_image)
+    vertical_lines, horizontal_lines = model_processing(results, perspective_matrix)
     
     black_stones = results[0].boxes.xywh[results[0].boxes.cls == 0]
     white_stones = results[0].boxes.xywh[results[0].boxes.cls == 6]
