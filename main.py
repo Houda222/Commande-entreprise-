@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+#%%
+=======
+>>>>>>> 02541445273fc8170131507c74a88b5307419396
 import math, os
 import cv2
 import numpy as np
@@ -31,8 +35,8 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     --------
     numpy array
         new calculated endpoints 
-    
     """
+
     slope, b = line_equation(x1, y1, x2, y2)
     if slope == float('Inf'):
         new_endpoints = np.array([x1, 0, x1, image_height], dtype=np.uint32)
@@ -75,7 +79,6 @@ def line_equation(x1, y1, x2, y2):
         slope of the line
     float 
         intercept of the line 
-    
     """
     if x1 == x2:
         "if slope is infinite , y = x1 = c"
@@ -108,10 +111,40 @@ def adress_lines(lines):
     return lines
 
 def are_similar(line1, line2, threshold=10):
+    """
+    Compare two lines and decide if they're almost the same line based on a certain threshold
+
+    Parameters:
+    -----------
+    line1: numpy array
+        4 elements array representing the first line [x1, y1, x2, y2]
+    line2: numpy array
+        4 elements array representing the second line [x1, y1, x2, y2]
+    threshold: int
+        Smallest the difference between 2 lines (default is 10)
+    
+    Returns:
+    --------
+    bool
+        true if similar, else false    
+    """
     return np.all(np.abs(line1 - line2) <= threshold)
 
 
 def removeDuplicates(lines):
+    """
+    Group similar lines and take the average of each group to keep one line per group
+
+    Parameters:
+    -----------
+    lines: list
+        list of lines to be filtered
+    
+    Returns:
+    --------
+    numpy array
+        filtered list of lines   
+    """
     grouped_lines = {}
     for line in lines:
         x1, y1, x2, y2 = line
@@ -150,6 +183,25 @@ def removeDuplicates(lines):
 
 
 def is_vertical(x1, y1, x2, y2):
+    """
+    Decide if a line is vertical or not
+
+    Parameters:
+    -----------
+    x1: float
+        The start point of the line in X direction
+    y1: float
+        The start point of the line in Y direction
+    x2: float
+        The end point of the line in X direction
+    y2: float
+        The end point of the line in Y direction
+    
+    Returns:
+    --------
+    bool
+        true if vertical, else false    
+    """
     return abs(x1 - x2) < 50 and abs(y1 - y2) > 50
 
 def intersect(line1, line2):
