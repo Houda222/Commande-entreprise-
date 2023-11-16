@@ -14,7 +14,7 @@ import traceback
 
 def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     """
-    Stretch a line to fit the whole image
+    Stretch a line to fit the whole image using the line equation y = slope * x + b
 
     Parameters:
     -----------
@@ -33,12 +33,10 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     
     Returns:
     --------
-
     numpy array
         new calculated endpoints 
-        
+    
     """
-    "y = slope * x + b"
     slope, b = line_equation(x1, y1, x2, y2)
     if slope == float('Inf'):
         new_endpoints = np.array([x1, 0, x1, image_height], dtype=np.uint32)
@@ -61,6 +59,28 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     return new_endpoints
 
 def line_equation(x1, y1, x2, y2):
+    """
+    Calculate the slope and the intercept b in the line equation y = slope * x + b
+
+    Parameters:
+    -----------
+    x1: float
+        The start point of the line in X direction
+    y1: float
+        The start point of the line in Y direction
+    x2: float
+        The end point of the line in X direction
+    y2: float
+        The end point of the line in Y direction
+    
+    Returns:
+    --------
+    float
+        slope of the line
+    float 
+        intercept of the line 
+    
+    """
     if x1 == x2:
         "if slope is infinite , y = x1 = c"
         slope = float('Inf')
@@ -71,7 +91,19 @@ def line_equation(x1, y1, x2, y2):
     return slope, b
 
 def adress_lines(lines):
-    # Sorts the order of endpoints
+    """
+    Sort the order of endpoints
+
+    Parameters:
+    -----------
+    lines: list
+        list of lines unsorted
+    
+    Returns:
+    --------
+    list
+        sorted lines    
+    """
     for i in range(len(lines)):
         x1, y1, x2, y2 = lines[i]
         if (x1 + y1) > (x2 + y2):
