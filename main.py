@@ -455,9 +455,9 @@ def model_processing(model_results, perspective_matrix, frame):
     global cluster_vertical, cluster_horizontal, all_intersections, empty_intersections, empty_corner, empty_edge
     from matplotlib import pyplot as plt
     
-    empty_intersections = model_results[0].boxes.xywh[results[0].boxes.cls == 3][:,[0, 1]]
-    empty_corner = model_results[0].boxes.xywh[results[0].boxes.cls == 4][:,[0, 1]]
-    empty_edge = model_results[0].boxes.xywh[results[0].boxes.cls == 5][:,[0, 1]]
+    empty_intersections = model_results[0].boxes.xywh[model_results[0].boxes.cls == 3][:,[0, 1]]
+    empty_corner = model_results[0].boxes.xywh[model_results[0].boxes.cls == 4][:,[0, 1]]
+    empty_edge = model_results[0].boxes.xywh[model_results[0].boxes.cls == 5][:,[0, 1]]
 
 
     if not empty_intersections is None:
@@ -584,8 +584,8 @@ def master(frame):
 
 
 def process_frames():
-    global ProcessFrame
-    while True:
+    global ProcessFrame, Process
+    while Process:
         if not ProcessFrame is None:
             try:
                 
@@ -604,11 +604,13 @@ def process_frames():
                 traceback.print_exc()
                 
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            Process = False
             break  # Break the loop if 'q' is pressed
 
 model = YOLO('best8B.pt')
 
 ProcessFrame = None
+Process = True
 
 process_thread = threading.Thread(target=process_frames, args=())
 process_thread.start()
@@ -627,7 +629,7 @@ while cap.isOpened():
     cv2.imshow('Video Stream', frame)
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
-
+        Process = False
         break 
 
 cap.release()
