@@ -376,7 +376,7 @@ def detect_intersections(cluster_1, cluster_2, image):
     """
     Detect intersections between vertical and horizontal line clusters.
 
-    Parameters:
+    Args:
     -----------
     cluster_1 : numpy.ndarray
                 Array of vertical lines represented by coordinates [x1, y1, x2, y2].
@@ -407,7 +407,7 @@ def define_moves(white_stones_transf, black_stones_transf, transformed_intersect
     """
     Define game moves based on the positions of white and black stones.
 
-    Parameters:
+    Args:
     -----------
     white_stones_transf : numpy.ndarray
                           Array of coordinates representing transformed positions of white stones.
@@ -454,7 +454,7 @@ def calculate_distances(lines):
     """
     Calculate distances between consecutive lines.
 
-    Parameters:
+    Args:
     -----------
     lines : numpy.ndarray
             Array of lines represented by coordinates [x1, y1, x2, y2].
@@ -471,7 +471,7 @@ def find_common_distance(distances, target_distance=30):
     """
     Find the common distance among a set of distances using DBSCAN clustering.
 
-    Parameters:
+    Args:
     -----------
     distances : list
                 List of distances to be clustered and analyzed.
@@ -511,7 +511,7 @@ def is_approx_multiple(value, base, threshold):
     """
     Check if a value is approximately a multiple of a given base within a specified threshold.
 
-    Parameters:
+    Args:
     -----------
     value : float
             The value to check.
@@ -531,7 +531,7 @@ def restore_missing_lines(lines, distance_threshold=10):
     """
     Restore missing lines in a set of lines based on a common distance.
 
-    Parameters:
+    Args:
     -----------
     lines : numpy.ndarray of shape (-1, 4)
             Array of lines represented by coordinates [x1, y1, x2, y2].
@@ -588,7 +588,7 @@ def non_max_suppression(boxes, overlapThresh=0.5):
     """
     Apply non-maximum suppression to eliminate redundant bounding boxes.
 
-    Parameters:
+    Args:
     -----------
     boxes : numpy.ndarray
             Array of bounding boxes with coordinates [x1, y1, x2, y2].
@@ -652,7 +652,7 @@ def model_processing(model_results, perspective_matrix):
     """
     Process model results to identify and cluster all intersections.
 
-    Parameters:
+    Args:
     -----------
     model_results : numpy.ndarray
                     List of model results containing information about boxes.
