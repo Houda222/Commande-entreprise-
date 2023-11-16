@@ -1,4 +1,3 @@
-
 import math, os
 import cv2
 import numpy as np
@@ -274,8 +273,6 @@ def clean_lines(lines, image_width, image_height):
     numpy array
         filtered list of lines   
     """   
-
-    global image
     
     for i in range(len(lines)):
         lines[i] = interpolate(*lines[i], image_width, image_height)
@@ -648,7 +645,7 @@ def non_max_suppression(boxes, overlapThresh=0.5):
 
 
 
-def model_processing(model_results, perspective_matrix):
+def lines_detection(model_results, perspective_matrix):
     """
     Process model results to identify and cluster all intersections.
 
@@ -664,8 +661,6 @@ def model_processing(model_results, perspective_matrix):
     Tuple of two numpy arrays representing clustered vertical and horizontal lines.
     """
 
-    global cluster_vertical, cluster_horizontal, all_intersections, empty_intersections, empty_corner, empty_edge
-    
     empty_intersections = model_results[0].boxes.xywh[model_results[0].boxes.cls == 3][:,[0, 1]]
     empty_corner = model_results[0].boxes.xywh[model_results[0].boxes.cls == 4][:,[0, 1]]
     empty_edge = model_results[0].boxes.xywh[model_results[0].boxes.cls == 5][:,[0, 1]]
@@ -731,7 +726,7 @@ def model_processing(model_results, perspective_matrix):
     return np.array(cluster_vertical).reshape((-1, 4)), np.array(cluster_horizontal).reshape((-1, 4))
     
 
-def master(frame):
+def process_frame(frame):
     results = model(frame)
     
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
@@ -760,7 +755,7 @@ def master(frame):
 
     transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
     
-    vertical_lines, horizontal_lines = model_processing(results, perspective_matrix)
+    vertical_lines, horizontal_lines = lines_detection(results, perspective_matrix)
     
     black_stones = results[0].boxes.xywh[results[0].boxes.cls == 0]
     white_stones = results[0].boxes.xywh[results[0].boxes.cls == 6]
@@ -794,7 +789,7 @@ def master(frame):
 
 
 
-def process_frames():
+def processing_thread():
     global ProcessFrame, Process
     while Process:
         if not ProcessFrame is None:
@@ -804,7 +799,7 @@ def process_frames():
                 ############ B LE CODE DYAL HOUDA;
                 ############ O sgf_filename HOWA LE NOM DYAL LE FICHER SGF LLI T ENREGISTRA 
                 ############ QUI CORRESPOND A game_plot
-                game_plot, sgf_filename = master(ProcessFrame)
+                game_plot, sgf_filename = process_frame(ProcessFrame)
                 cv2.imshow("master", game_plot)
                 
             except OverflowError as e:
@@ -818,12 +813,12 @@ def process_frames():
             Process = False
             break  # Break the loop if 'q' is pressed
 
-model = YOLO('best8B.pt')
+model = YOLO('model.pt')
 
 ProcessFrame = None
 Process = True
 
-process_thread = threading.Thread(target=process_frames, args=())
+process_thread = threading.Thread(target=processing_thread, args=())
 process_thread.start()
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
