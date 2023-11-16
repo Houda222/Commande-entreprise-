@@ -312,46 +312,6 @@ class GoSgf:
         
 
 
-#functions to find the new move played and append it to the list
- 
-def detect_new_move(old_moves, new_moves):
-    """
-    Find the new played move
-
-    Parameters:
-    -----------
-    old_moves : list
-    
-    new_moves : list
-
-    Returns:
-    --------
-    tuple
-        the new move 
-    """
-    new_move = [move for move in new_moves if move not in old_moves]
-    return new_move
-
-def update_moves(old_moves, new_moves):
-    """
-    Add the new move to moves in a way to keep the order of the played moves
-
-    Parameters:
-    -----------
-    old_moves : list
-    
-    new_moves : list
-
-    Returns:
-    --------
-    list
-        new moves in the correct order 
-    """
-    new_move = detect_new_move(old_moves, new_moves)
-    return old_moves.append(new_move)
-
-
-
 # #%%
 # ####example
 # moves = [('B', (9, 9)), ('W', (14, 18)), ('B', (14, 17)), ('W', (13, 17)), ('B', (3, 15)), ('W', (6, 15)), ('B', (14, 15)), ('W', (0, 14)), ('B', (14, 13)), ('W', (13, 13)), ('B', (0, 10)), ('W', (9, 9)), ('B', (10, 9)), ('W', (11, 9))]
