@@ -9,6 +9,45 @@ import threading
 import copy
 import traceback
 
+#functions to find the new move played and append it to the list
+ 
+def detect_new_move(old_moves, new_moves):
+    """
+    Find the new played move
+
+    Parameters:
+    -----------
+    old_moves : list
+    
+    new_moves : list
+
+    Returns:
+    --------
+    tuple
+        the new move 
+    """
+    new_move = [move for move in new_moves if move not in old_moves]
+    return new_move
+
+def update_moves(old_moves, new_moves):
+    """
+    Add the new move to moves in a way to keep the order of the played moves
+
+    Parameters:
+    -----------
+    old_moves : list
+    
+    new_moves : list
+
+    Returns:
+    --------
+    list
+        new moves in the correct order 
+    """
+    new_move = detect_new_move(old_moves, new_moves)
+    return old_moves.append(new_move)
+
+
 def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     """
     Stretch a line to fit the whole image using the line equation y = slope * x + b
