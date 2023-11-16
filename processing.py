@@ -5,45 +5,6 @@ from sklearn.cluster import KMeans, DBSCAN
 from mySgf import GoBoard, GoSgf
 
 
-#functions to find the new move played and append it to the list
- 
-def detect_new_move(old_moves, new_moves):
-    """
-    Find the new played move
-
-    Parameters:
-    -----------
-    old_moves : list
-    
-    new_moves : list
-
-    Returns:
-    --------
-    tuple
-        the new move 
-    """
-    new_move = [move for move in new_moves if move not in old_moves]
-    return new_move
-
-def update_moves(old_moves, new_moves):
-    """
-    Add the new move to moves in a way to keep the order of the played moves
-
-    Parameters:
-    -----------
-    old_moves : list
-    
-    new_moves : list
-
-    Returns:
-    --------
-    list
-        new moves in the correct order 
-    """
-    new_move = detect_new_move(old_moves, new_moves)
-    return old_moves.append(new_move)
-
-
 def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     """
     Stretch a line to fit the whole image using the line equation y = slope * x + b
@@ -65,7 +26,7 @@ def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
     
     Returns:
     --------
-    numpy array
+    numpy.ndarray
         new calculated endpoints 
     """
 
@@ -148,9 +109,9 @@ def are_similar(line1, line2, threshold=10):
 
     Args:
     -----------
-    line1: numpy array
+    line1: numpy.ndarray
         4 elements array representing the first line [x1, y1, x2, y2]
-    line2: numpy array
+    line2: numpy.ndarray
         4 elements array representing the second line [x1, y1, x2, y2]
     threshold: int
         Smallest the difference between 2 lines (default is 10)
@@ -174,7 +135,7 @@ def removeDuplicates(lines):
     
     Returns:
     --------
-    numpy array
+    numpy.ndarray
         filtered list of lines   
     """
     grouped_lines = {}
@@ -249,7 +210,7 @@ def intersect(line1, line2):
 
     Returns:
     --------
-    numpy array
+    numpy.ndarray
         x and y coordinates of the intersection    
     """
     slope1, b1 = line_equation(*line1)
@@ -298,7 +259,7 @@ def clean_lines(lines, image_width, image_height):
 
     Args:
     -----------
-    lines: numpy array
+    lines: numpy.ndarray
         List of lines to be cleaned
     image_width: int
         width of the image
@@ -306,7 +267,7 @@ def clean_lines(lines, image_width, image_height):
 
     Returns:
     --------
-    numpy array
+    numpy.ndarray
         filtered list of lines   
     """   
     
@@ -327,7 +288,7 @@ def get_angles(lines):
 
     Returns:
     --------
-    numpy array
+    numpy.ndarray
         List of angles in radians
     """
 
@@ -379,7 +340,7 @@ def create_board(intersections, board_size=(19,19)):
 
     Args:
     -----------
-    intersections: numpy array
+    intersections: numpy.ndarray
         List of found and interpolated intersections
     board_size:
         Size of the board (default is 19x19)
@@ -694,7 +655,7 @@ def lines_detection(model_results, perspective_matrix):
     
     Returns:
     --------
-    Tuple of two numpy arrays representing clustered vertical and horizontal lines.
+    Tuple of two numpy.ndarrays representing clustered vertical and horizontal lines.
     """
 
     empty_intersections = model_results[0].boxes.xywh[model_results[0].boxes.cls == 3][:,[0, 1]]
@@ -761,10 +722,7 @@ def lines_detection(model_results, perspective_matrix):
     
     return np.array(cluster_vertical).reshape((-1, 4)), np.array(cluster_horizontal).reshape((-1, 4))
     
-
-def process_frame(model, frame):
-    results = model(frame)
-    
+def get_corners(results):    
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
 
     corner_boxes = non_max_suppression(corner_boxes)
@@ -782,43 +740,54 @@ def process_frame(model, frame):
     upper = upper[upper[:, 0].argsort()]
     lower = lower[lower[:, 0].argsort()[::-1]]
     
-    input_points = np.concatenate((upper, lower)).astype(dtype=np.float32)
+    return np.concatenate((upper, lower)).astype(dtype=np.float32)
+
+def get_key_points(results, class_, perspective_matrix, output_edge=600):
+    key_points = results[0].boxes.xywh[results[0].boxes.cls == class_]
+
+    if not key_points is None:
+        if len(key_points) != 0:
+            key_points = np.array(key_points[:, [0, 1]])
+            key_points_transf = cv2.perspectiveTransform(key_points.reshape((1, -1, 2)), perspective_matrix).reshape((-1, 2))
+            return key_points_transf[(key_points_transf[:, 0:2] >= 0).all(axis=1) & (key_points_transf[:, 0:2] <= output_edge).all(axis=1)]
+
+    return key_points
+    
+
+
+def process_frame(model, frame):
+    results = model(frame)
+    input_points = get_corners(results)
 
     output_edge = 600
     output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
 
     perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
-
     transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
     
     vertical_lines, horizontal_lines = lines_detection(results, perspective_matrix)
     
-    black_stones = results[0].boxes.xywh[results[0].boxes.cls == 0]
-    white_stones = results[0].boxes.xywh[results[0].boxes.cls == 6]
+    black_stones = get_key_points(results, 0, perspective_matrix)
+    white_stones = get_key_points(results, 6, perspective_matrix)
 
-    black_stones = np.array(black_stones[:, [0, 1]])
-    white_stones = np.array(white_stones[:, [0, 1]])
-
-    black_stones_transf = cv2.perspectiveTransform(black_stones.reshape((1, -1, 2)), perspective_matrix).reshape((-1, 2))
-    white_stones_transf = cv2.perspectiveTransform(white_stones.reshape((1, -1, 2)), perspective_matrix).reshape((-1, 2))
-
-    black_stones_transf = black_stones_transf[(black_stones_transf[:, 0:2] >= 0).all(axis=1) & (black_stones_transf[:, 0:2] <= output_edge).all(axis=1)]
-    white_stones_transf = white_stones_transf[(white_stones_transf[:, 0:2] >= 0).all(axis=1) & (white_stones_transf[:, 0:2] <= output_edge).all(axis=1)]
-    
-       
     cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
     cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
-    
     
     intersections = detect_intersections(cluster_1, cluster_2, transformed_image)
     
     if len(intersections) == 0:
         raise Exception(">>>>>No intersection were found!")
+        
+    moves = define_moves(white_stones, black_stones, intersections)
+    
+    return moves
 
-    moves = define_moves(white_stones_transf, black_stones_transf, intersections)
 
+def show_board(model, frame):
+    moves = process_frame(model, frame)
     sgf_ = GoSgf('a', 'b', moves)
     _, sgf_n = sgf_.createSgf()
-    
+
     board = GoBoard(sgf_n)
     return board.final_position(), sgf_n
+
