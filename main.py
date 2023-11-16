@@ -1,4 +1,4 @@
-
+#%%
 import math, os
 import cv2
 import numpy as np
@@ -10,6 +10,31 @@ import copy
 import traceback
 
 def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
+    """
+    Stretch a line to fit the whole image
+
+    Parameters:
+    -----------
+    x1: float
+        The start point of the line in X direction
+    y1: float
+        The start point of the line in Y direction
+    x2: float
+        The end point of the line in X direction
+    y2: float
+        The end point of the line in Y direction
+    image_width: int
+        Width of the image (default is 600)
+    image_height: int
+        Height of the image (default is 600)
+    
+    Returns:
+    --------
+
+    numpy array
+        new calculated endpoints 
+        
+    """
     "y = slope * x + b"
     slope, b = line_equation(x1, y1, x2, y2)
     if slope == float('Inf'):
@@ -665,3 +690,5 @@ while cap.isOpened():
 cap.release()
 cv2.destroyAllWindows()
 
+
+# %%
