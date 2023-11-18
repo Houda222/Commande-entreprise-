@@ -149,9 +149,6 @@ class GoGame:
             print("no moves detected")        
         
 
-            
-
-
         
 #%%
 model = YOLO('model.pt')
