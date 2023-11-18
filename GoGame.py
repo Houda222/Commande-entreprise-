@@ -157,6 +157,7 @@ for i in range(2, 7):
 
     frame = cv2.imread(f"{i}.jpg")
     game.process_frame(frame)
+    print(game.game)
     print(game.moves)
 
 #%%
