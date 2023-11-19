@@ -784,15 +784,41 @@ def lines_detection(model_results, perspective_matrix):
  
     return np.array(cluster_vertical).reshape((-1, 4)), np.array(cluster_horizontal).reshape((-1, 4))
     
+def are_corner_inside_box(corner_boxes, board_box):
+    
+    x1, y1, x2, y2 = board_box
+
+    # Extract the coordinates of the squares
+    square_x1 = corner_boxes[:, 0]
+    square_y1 = corner_boxes[:, 1]
+    square_x2 = corner_boxes[:, 2]
+    square_y2 = corner_boxes[:, 3]
+
+    # Check if any corner of the corner_boxes is inside the board_box
+    condition = (
+        ((square_x1 >= x1) & (square_x1 <= x2) & (square_y1 >= y1) & (square_y1 <= y2)) |
+        ((square_x2 >= x1) & (square_x2 <= x2) & (square_y1 >= y1) & (square_y1 <= y2)) |
+        ((square_x1 >= x1) & (square_x1 <= x2) & (square_y2 >= y1) & (square_y2 <= y2)) |
+        ((square_x2 >= x1) & (square_x2 <= x2) & (square_y2 >= y1) & (square_y2 <= y2))
+    )
+
+    # Select corner_boxes that meet the condition
+    return corner_boxes[condition]
+        
 def get_corners(results):    
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
 
     corner_boxes = non_max_suppression(corner_boxes)
+    
+    board_model_edges = results[0].boxes.xyxy[results[0].boxes.cls == 1][0]
+    
+    corner_boxes = are_corner_inside_box(corner_boxes, np.array(board_model_edges))
 
     if len(corner_boxes) != 4:
         raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
 
     corner_centers = ((corner_boxes[:,[0, 1]] + corner_boxes[:,[2, 3]])/2)
+    # corner_centers = corner_centers
     
     corner_centers = corner_centers[corner_centers[:, 1].argsort()]
     

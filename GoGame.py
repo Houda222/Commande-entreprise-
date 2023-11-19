@@ -16,6 +16,9 @@ class GoGame:
         self.old_game = np.zeros((19, 19))
         self.game = np.zeros((19, 19))
         self.map = {}
+        
+        self.transformed_image = None
+        self.annotated_frame = None
     
     def detect_new_move(self, old_moves, new_moves):
         """
@@ -62,6 +65,8 @@ class GoGame:
     def process_frame(self, frame):
         
         self.results = self.model(frame)
+        self.annotated_frame = self.results[0].plot(labels=False, conf=False)
+        imshow_(self.annotated_frame)
         
         input_points = get_corners(self.results)
 
@@ -69,7 +74,7 @@ class GoGame:
         output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
 
         perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
-        transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
+        self.transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
         
         vertical_lines, horizontal_lines = lines_detection(self.results, perspective_matrix)
         
@@ -90,7 +95,7 @@ class GoGame:
         cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
         cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
         
-        intersections = detect_intersections(cluster_1, cluster_2, transformed_image)
+        intersections = detect_intersections(cluster_1, cluster_2, self.transformed_image)
         
         if len(intersections) == 0:
             raise Exception(">>>>>No intersection were found!")
@@ -98,7 +103,7 @@ class GoGame:
         self.update_game(white_stones, black_stones, intersections)
         self.define_ordered_moves()
         sgf_ = GoSgf('a', 'b', self.not_moves)
-        sgf_ = GoSgf('a', 'b', self.moves)
+        # sgf_ = GoSgf('a', 'b', self.moves)
         _, sgf_n = sgf_.createSgf()
 
         board = GoBoard(sgf_n)
@@ -163,12 +168,16 @@ class GoGame:
         difference = self.game - self.old_game
         pos_black = np.where(difference == 1000)
         pos_white = np.where(difference == 1)
-        if len(pos_black) != 0:
+        if len(pos_black[0]) > 1 or len(pos_white[0]) > 1 or len(pos_black[0])+len(pos_white[0]) > 1:
+            print("MORE THAN ONE STONE WAS ADDED")
+            return
+        if len(pos_black[0]) != 0:
             self.moves.append(('B', (pos_black[0][0], pos_black[1][0])))
-        elif len(pos_black) != 0: 
+            return
+        if len(pos_black[0]) != 0: 
             self.moves.append(('W', (pos_white[0][0], pos_white[1][0])))
-        else:
-            print("no moves detected")        
+            return
+        print("no moves detected")        
         
 
         
@@ -178,10 +187,10 @@ game = GoGame(model)
 for i in range(1, 15):
 
     frame = cv2.imread(f"img/{i}.jpg")
-    game.process_frame(frame)
-    annotated_frame = game.results[0].plot(labels=False, conf=False)
+    imshow_(game.process_frame(frame))
+    # annotated_frame = game.results[0].plot(labels=False, conf=False)
     # imshow_(annotated_frame)
-    print(game.game)
+    # print(game.game)
     print(game.moves)
 
 
