@@ -96,8 +96,9 @@ class GoGame:
             raise Exception(">>>>>No intersection were found!")
         
         self.update_game(white_stones, black_stones, intersections)
-        # self.define_ordered_moves()
+        self.define_ordered_moves()
         sgf_ = GoSgf('a', 'b', self.not_moves)
+        sgf_ = GoSgf('a', 'b', self.moves)
         _, sgf_n = sgf_.createSgf()
 
         board = GoBoard(sgf_n)
@@ -174,9 +175,9 @@ class GoGame:
 #%%
 model = YOLO('model.pt')
 game = GoGame(model)
-for i in range(2, 7):
+for i in range(1, 15):
 
-    frame = cv2.imread(f"{i}.jpg")
+    frame = cv2.imread(f"img/{i}.jpg")
     game.process_frame(frame)
     annotated_frame = game.results[0].plot(labels=False, conf=False)
     # imshow_(annotated_frame)
