@@ -15,48 +15,6 @@ class GoGame:
         self.old_game = np.zeros((19, 19))
         self.game = np.zeros((19, 19))
         self.map = {}
-    
-    def detect_new_move(self, old_moves, new_moves):
-        """
-        Find the new played move
-
-        Parameters:
-        -----------
-        old_moves : list
-        
-        new_moves : list
-
-        Returns:
-        --------
-        tuple
-            the new move 
-        """
-
-        new_move = [move for move in new_moves if move not in old_moves]
-        return new_move
-
-    def update_moves(self, old_moves, new_moves):
-        """
-        Add the new move to moves in a way to keep the order of the played moves
-
-        Parameters:
-        -----------
-        old_moves : list
-        
-        new_moves : list
-
-        Returns:
-        --------
-        list
-            new moves in the correct order 
-        """
-
-        if old_moves is not None:
-            new_move = self.detect_new_move(old_moves, new_moves)
-            return old_moves.append(new_move)
-        else:
-            return new_moves
-
 
     def process_frame(self, frame):
         
@@ -154,7 +112,7 @@ class GoGame:
 model = YOLO('model.pt')
 game = GoGame(model)
 for i in range(2, 7):
-
+    print(i)
     frame = cv2.imread(f"{i}.jpg")
     game.process_frame(frame)
     print(game.moves)
