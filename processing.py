@@ -677,60 +677,148 @@ def lines_detection(model_results, perspective_matrix):
         if len(empty_edge) != 0:
             empty_edge = np.array(empty_edge[:, [0, 1]])
             empty_edge = cv2.perspectiveTransform(empty_edge.reshape((1, -1, 2)), perspective_matrix).reshape((-1, 2))
-    
+
     all_intersections = np.concatenate((empty_intersections, empty_corner, empty_edge), axis=0)
-    
+
     all_intersections = all_intersections[(all_intersections[:, 0:2] >= 0).all(axis=1) & (all_intersections[:, 0:2] <= 600).all(axis=1)]
+
+
+
+    all_intersections = all_intersections[all_intersections[:, 0].argsort()]
+
     all_intersections_x = all_intersections[:,0].reshape((-1, 1))
-    
+
     kmeans = KMeans(n_clusters=19, n_init=10)
     kmeans.fit(all_intersections_x)
 
     # Get the cluster labels for each line
     cluster_labels = kmeans.labels_
-    unique_labels = np.unique(cluster_labels)
-    
-    cluster_vertical = []
-    i = 0
-    for label in unique_labels:
+    unique_labels, label_counts = np.unique(cluster_labels, return_counts=True)
+
+    # Sort the labels based on their counts in decreasing order
+    sorted_indices = np.argsort(label_counts)[::-1]
+    sorted_unique_labels = unique_labels[sorted_indices]
+
+
+    lines_equations = np.array([]).reshape((-1, 2))
+    lines_points_length = np.array([])
+    cluster_vertical = np.array([]).reshape((-1, 4))
+
+    for i, label in enumerate(sorted_unique_labels):
         line = all_intersections[cluster_labels==label]
-        line = line[np.argsort(line[:, 1])]
-        first_endpoint = line[0]
-        last_endpoint = line[-1]
-        line = interpolate(*first_endpoint, *last_endpoint)
-        cluster_vertical.append(line)
+        # print(i, len(line), line)
+        # draw_points(line.astype(int), img)
+        if len(line) > 2:
+            # line = line[np.argsort(line[:, 1])]
+            slope, intercept = np.polyfit(line[:,1], line[:,0], 1) # on inverse x et y
+            line_ = np.array([intercept, 0, slope * 600 + intercept, 600])# on iverse les x et y
+            lines_equations = np.append(lines_equations, [[slope, intercept]], axis=0)
+        else:
+            if len(cluster_vertical) == 0:
+                raise Exception(f">>>>>> Cannot reconstruct ALL VERTICAL LINES")
+            elif len(line) < 1:
+                raise Exception(f">>>>>> Cannot reconstruct vertical line at point {line}")
+            else:
+                x1, y1 = line[0]
+                slope = np.average(lines_equations[:,0], weights=lines_points_length, axis=0)
+                intercept = x1 - slope * y1
+                line_ = np.array([intercept, 0, slope * 600 + intercept, 600])
+                lines_equations = np.append(lines_equations, [[slope, intercept]], axis=0)
+        lines_points_length = np.append(lines_points_length, [len(line)], axis=0)
         
+        # x1, y1, x2, y2 = line_.astype(np.uint32)
+        # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 1)
+        # draw_points([(x1, y1), (x2, y2)], img)
+        
+        cluster_vertical = np.append(cluster_vertical, [line_], axis=0)
+    cluster_vertical = adress_lines(cluster_vertical)
+    cluster_vertical = np.sort(cluster_vertical, axis=0).astype(int)
+
+
+    all_intersections = all_intersections[all_intersections[:, 1].argsort()]
     all_intersections_y = all_intersections[:,1].reshape((-1, 1))
-    
+
     kmeans = KMeans(n_clusters=19, n_init=10)
     kmeans.fit(all_intersections_y)
 
     # Get the cluster labels for each line
     cluster_labels = kmeans.labels_
-    unique_labels = np.unique(cluster_labels)
-    
+    unique_labels, label_counts = np.unique(cluster_labels, return_counts=True)
 
-    cluster_horizontal = []
-    i = 0
-    for label in unique_labels:
+    # Sort the labels based on their counts in decreasing order
+    sorted_indices = np.argsort(label_counts)[::-1]
+    sorted_unique_labels = unique_labels[sorted_indices]
+
+    # img = np.copy(transformed_image)
+    lines_equations = np.array([]).reshape((-1, 2))
+    lines_points_length = np.array([])
+    cluster_horizontal = np.array([]).reshape((-1, 4))
+
+    for label in sorted_unique_labels:
         line = all_intersections[cluster_labels==label]
-        line = line[np.argsort(line[:, 0])]
-        first_endpoint = line[0]
-        last_endpoint = line[-1]
-        line = interpolate(*first_endpoint, *last_endpoint)
-        cluster_horizontal.append(line)
-    
+        
+        if len(line) > 2:
+            line = line[np.argsort(line[:, 0])]
+            slope, intercept = np.polyfit(line[:,0], line[:,1], 1)
+            line = np.array([0, intercept, 600, slope * 600 + intercept])
+            lines_equations = np.append(lines_equations, [[slope, intercept]], axis=0)
+        else:
+            if len(cluster_horizontal) == 0:
+                raise Exception(f">>>>>> Cannot reconstruct ALL HORIZONTAL LINES")
+            elif len(line) < 1:
+                raise Exception(f">>>>>> Cannot reconstruct line at point {line}")
+            else:
+                x1, y1 = line[0]
+                slope = np.average(lines_equations[:,0], weights=lines_points_length, axis=0)
+                intercept = y1 - slope * x1
+                line = np.array([0, intercept, 600, slope * 600 + intercept])
+                lines_equations = np.append(lines_equations, [[slope, intercept]], axis=0)
+        lines_points_length = np.append(lines_points_length, [len(line)], axis=0)
+        
+        # x1, y1, x2, y2 = line.astype(int)
+        # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 1)
+        # draw_points([(x1, y1), (x2, y2)], img)
+        cluster_horizontal = np.append(cluster_horizontal, [line], axis=0)
+    cluster_horizontal = adress_lines(cluster_horizontal)
+    cluster_horizontal = np.sort(cluster_horizontal, axis=0).astype(int)
+ 
     return np.array(cluster_vertical).reshape((-1, 4)), np.array(cluster_horizontal).reshape((-1, 4))
     
+def are_corner_inside_box(corner_boxes, board_box):
+    
+    x1, y1, x2, y2 = board_box
+
+    # Extract the coordinates of the squares
+    square_x1 = corner_boxes[:, 0]
+    square_y1 = corner_boxes[:, 1]
+    square_x2 = corner_boxes[:, 2]
+    square_y2 = corner_boxes[:, 3]
+
+    # Check if any corner of the corner_boxes is inside the board_box
+    condition = (
+        ((square_x1 >= x1) & (square_x1 <= x2) & (square_y1 >= y1) & (square_y1 <= y2)) |
+        ((square_x2 >= x1) & (square_x2 <= x2) & (square_y1 >= y1) & (square_y1 <= y2)) |
+        ((square_x1 >= x1) & (square_x1 <= x2) & (square_y2 >= y1) & (square_y2 <= y2)) |
+        ((square_x2 >= x1) & (square_x2 <= x2) & (square_y2 >= y1) & (square_y2 <= y2))
+    )
+
+    # Select corner_boxes that meet the condition
+    return corner_boxes[condition]
+        
 def get_corners(results):    
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
 
     corner_boxes = non_max_suppression(corner_boxes)
+    
+    board_model_edges = results[0].boxes.xyxy[results[0].boxes.cls == 1][0]
+    
+    corner_boxes = are_corner_inside_box(corner_boxes, np.array(board_model_edges))
 
     if len(corner_boxes) != 4:
         raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
 
     corner_centers = ((corner_boxes[:,[0, 1]] + corner_boxes[:,[2, 3]])/2)
+    # corner_centers = corner_centers
     
     corner_centers = corner_centers[corner_centers[:, 1].argsort()]
     
@@ -752,7 +840,7 @@ def get_key_points(results, class_, perspective_matrix, output_edge=600):
             return key_points_transf[(key_points_transf[:, 0:2] >= 0).all(axis=1) & (key_points_transf[:, 0:2] <= output_edge).all(axis=1)]
 
     return key_points
-    
+
 
 
 def process_frame(model, frame):

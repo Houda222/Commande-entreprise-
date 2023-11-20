@@ -4,6 +4,7 @@ import traceback
 from ultralytics import YOLO
 import cv2
 from processing import show_board
+from GoGame import *
 
 def processing_thread():
     global ProcessFrame, Process
@@ -15,7 +16,8 @@ def processing_thread():
                 ############ B LE CODE DYAL HOUDA;
                 ############ O sgf_filename HOWA LE NOM DYAL LE FICHER SGF LLI T ENREGISTRA 
                 ############ QUI CORRESPOND A game_plot
-                game_plot, sgf_filename = show_board(model, ProcessFrame)
+                game_plot = game.process_frame(frame)
+                # game_plot, sgf_filename = show_board(model, ProcessFrame)
                 cv2.imshow("master", game_plot)
                 
             except OverflowError as e:
@@ -30,6 +32,7 @@ def processing_thread():
             break  # Break the loop if 'q' is pressed
 
 model = YOLO('model.pt')
+game = GoGame(model)
 
 ProcessFrame = None
 Process = True
