@@ -185,15 +185,12 @@ class GoGame:
 #%%
 model = YOLO('model.pt')
 game = GoGame(model)
-for i in range(1, 9):
+for i in range(1, 15):
 
     frame = cv2.imread(f"img/{i}.jpg")
-    print(f"img/{i}.jpg")
     imshow_(game.process_frame(frame))
     # annotated_frame = game.results[0].plot(labels=False, conf=False)
     # imshow_(annotated_frame)
     # print(game.game)
     print(game.moves)
 
-
-# %%
