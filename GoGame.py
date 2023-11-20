@@ -184,14 +184,43 @@ class GoGame:
 #%%
 model = YOLO('model.pt')
 game = GoGame(model)
-for i in range(1, 15):
+# for i in range(1, 15):
 
-    frame = cv2.imread(f"img/{i}.jpg")
-    imshow_(game.process_frame(frame))
-    # annotated_frame = game.results[0].plot(labels=False, conf=False)
-    # imshow_(annotated_frame)
-    # print(game.game)
-    print(game.moves)
+#     frame = cv2.imread(f"img/{i}.jpg")
+#     imshow_(game.process_frame(frame))
+#     # annotated_frame = game.results[0].plot(labels=False, conf=False)
+#     # imshow_(annotated_frame)
+#     # print(game.game)
+#     print(game.moves)
 
+#%%
+def imshow_(image):
+    screen_width, screen_height = 1920, 1080  # Replace with your screen resolution or use a library to detect it dynamically
 
-# %%
+    # Calculate the scaling factors for width and height
+    width_scale = screen_width / float(image.shape[1])
+    height_scale = screen_height / float(image.shape[0])
+
+    # Choose the smaller scaling factor to fit the image within the screen dimensions
+    scale = min(width_scale, height_scale)
+
+    # Resize the image with the calculated scale
+    resized_image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+
+    # Get the dimensions of the resized image
+    window_width, window_height = resized_image.shape[1], resized_image.shape[0]
+
+    # Create a window with the determined size
+    cv2.namedWindow('img', cv2.WINDOW_KEEPRATIO)
+    # cv2.resizeWindow('img', window_width, window_height)
+    cv2.imshow('img', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+def draw_lines(lines, img=None, color=(0, 0, 255), thickness=1):
+    global image
+    if img is None:
+        img = np.zeros_like(image)
+    for line in lines:
+        x1, y1, x2, y2 = line
+        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+    imshow_(img)

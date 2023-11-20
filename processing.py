@@ -2,6 +2,7 @@ import math
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
+from itertools import combinations
 from mySgf import GoBoard, GoSgf
 
 
@@ -879,3 +880,74 @@ def show_board(model, frame):
     board = GoBoard(sgf_n)
     return board.final_position(), sgf_n
 
+#####################################3
+# %%
+###################################
+
+def add_lines_in_the_edges(lines, type):
+    mean_distance = average_distance(lines)
+
+    if len(lines) != 18:
+        return lines
+    
+    if type == "vertical":
+        # 600 being the image size
+        left_border =  np.array([0, 0, 0, 600])
+        right_border = np.array([600, 0, 600, 600])
+        if line_distance(lines[0], left_border) > mean_distance:
+            x1 = lines[0][0]-mean_distance
+            y1 = lines[0][1]
+            x2 = lines[0][2]-mean_distance
+            y2 = lines[0][3]
+            lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
+        elif line_distance(lines[-1], right_border) > mean_distance:
+            x1 = lines[-1][0]+mean_distance
+            y1 = lines[-1][1]
+            x2 = lines[-1][2]+mean_distance
+            y2 = lines[-1][3]  
+            print([[x1, y1, x2, y2]])  
+            lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
+        else:
+            print("No missing edges in the vertical lines")
+
+
+    elif type == "horizontal":
+        # 600 being the image size
+        top_border =  np.array([0, 0, 600, 0])
+        bottom_border = np.array([0, 600, 600, 600])
+        if line_distance(lines[0], top_border) > mean_distance:
+            x1 = lines[0][0]
+            y1 = lines[0][1]-mean_distance
+            x2 = lines[0][2]
+            y2 = lines[0][3]-mean_distance
+            lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
+        elif line_distance(lines[-1], bottom_border) > mean_distance:
+            x1 = lines[-1][0]
+            y1 = lines[-1][1]+mean_distance
+            x2 = lines[-1][2]
+            y2 = lines[-1][3]+mean_distance   
+            lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
+ 
+        else:
+            print("No missing edges in the horizontal lines")
+                
+    else:
+        print("Please specify a line type")
+    
+    return lines.astype(int)
+    
+
+
+def line_distance(line1, line2):
+   x11, y11, x21, y21 = line1
+   return (np.linalg.norm(line1[:2]-line2[:2]) + np.linalg.norm(line1[2:]-line2[2:])) / 2
+
+
+def calculate_distances(lines):
+    return [line_distance(lines[i + 1], lines[i]) for i in range(len(lines) - 1)]
+
+def average_distance(lines):
+    distances = [line_distance(lines[i + 1], lines[i]) for i in range(len(lines) - 1)]
+    mean_distance = np.average(distances)
+    return mean_distance
+# %%
