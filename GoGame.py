@@ -85,9 +85,10 @@ class GoGame:
         horizontal_lines = restore_missing_lines(horizontal_lines)
         
         
-        # img = np.copy(transformed_image)
-        # draw_lines(vertical_lines, img)
-        # draw_lines(horizontal_lines, img)
+        img = np.copy(self.transformed_image)
+        draw_lines(vertical_lines, img)
+        img = np.copy(self.transformed_image)
+        draw_lines(horizontal_lines, img)
         
         black_stones = get_key_points(self.results, 0, perspective_matrix)
         white_stones = get_key_points(self.results, 6, perspective_matrix)
@@ -184,9 +185,10 @@ class GoGame:
 #%%
 model = YOLO('model.pt')
 game = GoGame(model)
-for i in range(1, 15):
+for i in range(1, 9):
 
     frame = cv2.imread(f"img/{i}.jpg")
+    print(f"img/{i}.jpg")
     imshow_(game.process_frame(frame))
     # annotated_frame = game.results[0].plot(labels=False, conf=False)
     # imshow_(annotated_frame)
