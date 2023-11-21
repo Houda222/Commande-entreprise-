@@ -52,7 +52,7 @@ def average_distance(lines):
  #%%   
 model = YOLO('model.pt')
 game = GoGame(model)
-frame = cv2.imread(f"img/{1}.jpg")
+frame = cv2.imread(f"img/{3}.jpg")
 model_results = model(frame)
 
 input_points = get_corners(model_results)
@@ -89,7 +89,7 @@ all_intersections = all_intersections[(all_intersections[:, 0:2] >= 0).all(axis=
 
 # %%
 # remove a given number of random elements
-num_elements_to_remove = 20
+num_elements_to_remove = 1
 
 # Generate random indices to remove
 indices_to_remove = np.random.choice(all_intersections.shape[0], num_elements_to_remove, replace=False)
@@ -126,10 +126,30 @@ all_positions = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, 32) 
 #%%
 img2 = transformed_image.copy()
 
-daw_points(all_intersections_test, img2)
+daw_points(all_intersections, img2)
 imshow_(img2)
 # %%
 img = transformed_image.copy()
 daw_points(all_positions, img)
 imshow_(img)
 # %%
+def interpolate_intersections(intersections, interpolate_type='quadratic'):
+    
+    # Separate x and y coordinates for interpolation
+    x_coords, y_coords = zip(*intersections)
+ 
+    # Polynomial interpolation function for x and y coordinates
+    poly_interp_x = interp1d(x_coords, y_coords, kind=interpolate_type, fill_value="extrapolate")
+    poly_interp_y = interp1d(y_coords, x_coords, kind=interpolate_type, fill_value="extrapolate")
+
+    # Determine grid bounds
+    min_x, max_x = min(x_coords), max(x_coords)
+    min_y, max_y = min(y_coords), max(y_coords)
+
+    #define the step 
+    step = 32 #change to average distance between lines
+
+    # Generate positions for all points on the grid
+    all_intersections = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, step) for y in range(int(min_y), int(max_y) + 1, step)])
+
+    return all_intersections

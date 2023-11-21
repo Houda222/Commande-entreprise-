@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
 from itertools import combinations
 from mySgf import GoBoard, GoSgf
+from scipy.interpolate import interp1d
+
 
 
 def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
@@ -950,25 +952,25 @@ def average_distance(lines):
     distances = [line_distance(lines[i + 1], lines[i]) for i in range(len(lines) - 1)]
     mean_distance = np.average(distances)
     return mean_distance
-# %%
-import numpy as np
-from scipy.interpolate import interp1d
-
-# Sample data (replace this with your actual data)
-intersection_data = [(0, 0), (1, 1), (3, 3), (4, 4), (6, 6)]
-
-# Separate x and y coordinates for interpolation
-x_coords, y_coords = zip(*intersection_data)
-
-# Polynomial interpolation function for x and y coordinates
-poly_interp_x = interp1d(x_coords, y_coords, kind='quadratic', fill_value="extrapolate")
-poly_interp_y = interp1d(y_coords, x_coords, kind='quadratic', fill_value="extrapolate")
-
-# Determine grid bounds
-min_x, max_x = min(x_coords), max(x_coords)
-min_y, max_y = min(y_coords), max(y_coords)
-
-# Generate positions for all points on the grid
-all_positions = [(x, y) for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)]
 
 # %%
+def interpolate_intersections(intersections, interpolate_type='quadratic'):
+    
+    # Separate x and y coordinates for interpolation
+    x_coords, y_coords = zip(*intersections)
+ 
+    # Polynomial interpolation function for x and y coordinates
+    poly_interp_x = interp1d(x_coords, y_coords, kind=interpolate_type, fill_value="extrapolate")
+    poly_interp_y = interp1d(y_coords, x_coords, kind=interpolate_type, fill_value="extrapolate")
+
+    # Determine grid bounds
+    min_x, max_x = min(x_coords), max(x_coords)
+    min_y, max_y = min(y_coords), max(y_coords)
+
+    #define the step 
+    step = 32 #change to average distance between lines
+
+    # Generate positions for all points on the grid
+    all_intersections = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, step) for y in range(int(min_y), int(max_y) + 1, step)])
+
+    return all_intersections
