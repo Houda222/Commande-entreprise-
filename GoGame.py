@@ -66,7 +66,7 @@ class GoGame:
         
         self.results = self.model(frame)
         self.annotated_frame = self.results[0].plot(labels=False, conf=False)
-        imshow_(self.annotated_frame)
+        # imshow_(self.annotated_frame)
         
         input_points = get_corners(self.results)
 
@@ -86,9 +86,9 @@ class GoGame:
         
         
         img = np.copy(self.transformed_image)
-        draw_lines(vertical_lines, img)
+        # draw_lines(vertical_lines, img)
         img = np.copy(self.transformed_image)
-        draw_lines(horizontal_lines, img)
+        # draw_lines(horizontal_lines, img)
         
         black_stones = get_key_points(self.results, 0, perspective_matrix)
         white_stones = get_key_points(self.results, 6, perspective_matrix)
@@ -188,9 +188,56 @@ game = GoGame(model)
 for i in range(1, 15):
 
     frame = cv2.imread(f"img/{i}.jpg")
-    imshow_(game.process_frame(frame))
+    # imshow_(game.process_frame(frame))
     # annotated_frame = game.results[0].plot(labels=False, conf=False)
     # imshow_(annotated_frame)
     # print(game.game)
-    print(game.moves)
+    # print(game.moves)
 
+
+# %%
+
+# def restore_missing_lines(lines, distance_threshold=10):
+#     # ax=0 : x axis / ax=1 : y axis
+#     lines = np.sort(lines, axis=0)
+#     distances = calculate_distances(lines)
+#     if len(distances) <= 1:
+#         return lines
+#     mean_distance, distances = find_common_distance(distances)
+    
+#     restored_lines = []
+    
+#     for i in range(len(lines) - 1):
+#         print(i, lines)
+#         spacing = (np.linalg.norm(lines[i + 1][:2]-lines[i][:2]) + np.linalg.norm(lines[i + 1][2:]-lines[i][2:]))/2
+        
+#         if is_approx_multiple(spacing, mean_distance, distance_threshold):
+#             print("aprrox_multi")
+#             if spacing >= mean_distance:
+#                 num_missing_lines = round(spacing / mean_distance) - 1
+#                 print("big spacing", num_missing_lines)
+#                 for j in range(1, num_missing_lines + 1):
+#                     if is_vertical(*lines[i]):
+#                         x1 = lines[i][0] + j * mean_distance
+#                         y1 = lines[i][1]
+#                         x2 = lines[i][2] + j * mean_distance
+#                         y2 = lines[i][3]
+#                     else:
+#                         x1 = lines[i][0]
+#                         y1 = lines[i][1] + j * mean_distance
+#                         x2 = lines[i][2]
+#                         y2 = lines[i][3] + j * mean_distance
+#                     restored_lines.append([x1, y1, x2, y2])
+#         else:
+#             print("deleting", spacing, mean_distance)
+#             lines = np.delete(lines, i+1, axis=0)
+#             i -= 1
+  
+  
+#     if len(restored_lines) != 0:
+#         lines = np.append(lines, np.array(restored_lines, dtype=int), axis=0)
+#     lines = np.sort(lines, axis=0)
+    
+#     return lines
+# # %%
+# restore_missing_lines(horizontal_lines)

@@ -163,7 +163,7 @@ def removeDuplicates(lines):
         x1, y1, x2, y2 = line
         found = False
         for key in second_dict.keys():
-            if are_similar(key, line, threshold=10):
+            if are_similar(key, line, threshold=5):
                 second_dict[key] = second_dict[key] + [line]
                 found = True
                 break
@@ -520,7 +520,7 @@ def is_approx_multiple(value, base, threshold):
     bool
         True if the value is approximately a multiple of the base within the threshold, False otherwise.
     """
-    return abs(value - round(value / base) * base) < threshold
+    return abs(value - math.floor(value / base) * base) < threshold
 
 def restore_missing_lines(lines, distance_threshold=10):
     """
