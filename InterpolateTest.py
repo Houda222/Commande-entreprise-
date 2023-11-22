@@ -99,7 +99,7 @@ all_intersections_test = np.delete(all_intersections, indices_to_remove, axis=0)
 
 # %%
 import numpy as np
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, interp2d, RegularGridInterpolator
 
 # Sample data (replace this with your actual data)
 intersection_data = all_intersections_test
@@ -118,7 +118,7 @@ min_y, max_y = min(y_coords), max(y_coords)
 # Generate positions for all points on the grid
 all_positions = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, 32) for y in range(int(min_y), int(max_y) + 1, 32)])
 # # Generate positions for missing intersections using polynomial interpolation
-# missing_positions = [(x, int(poly_interp_x(x))) for x in range(int(min_x), int(max_x) + 1) if x not in x_coords]
+missing_positions = np.array([(x, int(poly_interp_x(x))) for x in range(int(min_x), int(max_x) + 1, 32) if x not in x_coords])
 
 # # Combine original and missing data
 # interpolated_data = intersection_data + missing_positions
@@ -126,30 +126,85 @@ all_positions = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, 32) 
 #%%
 img2 = transformed_image.copy()
 
-daw_points(all_intersections, img2)
+daw_points(missing_positions, img2)
 imshow_(img2)
 # %%
 img = transformed_image.copy()
 daw_points(all_positions, img)
 imshow_(img)
+
+#%%
+import matplotlib.pyplot as plt
+grid_points = all_intersections_test
+x, y = np.array([-2, 0, 4]), np.array([-2, 0, 2, 5])
+
+xg, yg = np.meshgrid(x, y, indexing='ij')
+def ff(x, y):
+    return x**2 + y**2
+data = ff(xg, yg)
+interp = RegularGridInterpolator((x, y), data,
+                                 bounds_error=False, fill_value=None)
+
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.scatter(xg.ravel(), yg.ravel(), data.ravel(),
+           s=60, c='k', label='data')
+
+xx = np.linspace(-4, 9, 31)
+yy = np.linspace(-4, 9, 31)
+X, Y = np.meshgrid(xx, yy, indexing='ij')
+# interpolator
+ax.plot_wireframe(X, Y, interp((X, Y)), rstride=3, cstride=3,
+                  alpha=0.4, color='m', label='linear interp')
+
+# # ground truth
+# ax.plot_wireframe(X, Y, ff(X, Y), rstride=3, cstride=3,
+#                   alpha=0.4, label='ground truth')
+# plt.legend()
+# plt.show()
+
 # %%
-def interpolate_intersections(intersections, interpolate_type='quadratic'):
-    
-    # Separate x and y coordinates for interpolation
-    x_coords, y_coords = zip(*intersections)
- 
-    # Polynomial interpolation function for x and y coordinates
-    poly_interp_x = interp1d(x_coords, y_coords, kind=interpolate_type, fill_value="extrapolate")
-    poly_interp_y = interp1d(y_coords, x_coords, kind=interpolate_type, fill_value="extrapolate")
+grid_points = all_intersections_test
+x, y = 
 
-    # Determine grid bounds
-    min_x, max_x = min(x_coords), max(x_coords)
-    min_y, max_y = min(y_coords), max(y_coords)
+xg, yg = np.meshgrid(x, y, indexing='ij')
 
-    #define the step 
-    step = 32 #change to average distance between lines
+data = np.ones_like(x)
+interp = RegularGridInterpolator((x, y), data,
+                                 bounds_error=False, fill_value=None)
 
-    # Generate positions for all points on the grid
-    all_intersections = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, step) for y in range(int(min_y), int(max_y) + 1, step)])
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.scatter(data.ravel(),
+           s=60, c='k', label='data')
 
-    return all_intersections
+xx = np.linspace(-4, 9, 31)
+yy = np.linspace(-4, 9, 31)
+X, Y = np.meshgrid(xx, yy, indexing='ij')
+# interpolator
+ax.plot_wireframe(X, Y, interp((X, Y)), rstride=3, cstride=3,
+                  alpha=0.4, color='m', label='linear interp')
+
+# # ground truth
+# ax.plot_wireframe(X, Y, ff(X, Y), rstride=3, cstride=3,
+#                   alpha=0.4, label='ground truth')
+# plt.legend()
+# plt.show()
+# %%
+
+
+x_coords = all_intersections[:, 0]
+y_coords = all_intersections[:, 1]
+values = np.ones(x_coords.shape)
+
+# Create a grid of coordinates from (0,0) to (18,18)
+x_grid, y_grid = np.meshgrid(np.arange(19), np.arange(19), indexing='ij')
+
+# Create a RegularGridInterpolator
+rgi = RegularGridInterpolator((x_coords, y_coords), values, method='linear', bounds_error=False, fill_value=None)
+
+# Evaluate the interpolator on the grid
+interpolated_values = rgi(np.column_stack((x_grid.flatten(), y_grid.flatten())))
+
+# Reshape the interpolated values to match the grid shape
+interpolated_values = interpolated_values.reshape(x_grid.shape)
