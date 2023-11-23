@@ -286,6 +286,8 @@ class GoSgf:
             sgf_file.write(")\n")
 
         return sgf_file, sgf_filename
+    
+    
     # def manually_add_a_move(self, move):
     #     """
     #     Add a move to the sgf file
