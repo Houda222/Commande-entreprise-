@@ -66,7 +66,7 @@ class GoGame:
         
         self.results = self.model(frame)
         self.annotated_frame = self.results[0].plot(labels=False, conf=False)
-        # imshow_(self.annotated_frame)
+        imshow_(self.annotated_frame)
         
         input_points = get_corners(self.results)
 
@@ -78,17 +78,40 @@ class GoGame:
         
         vertical_lines, horizontal_lines = lines_detection(self.results, perspective_matrix)
         
-        vertical_lines = removeDuplicates(vertical_lines)
-        vertical_lines = restore_missing_lines(vertical_lines)
+        # img = np.copy(self.transformed_image)
+        # draw_lines(vertical_lines, img)
+        # # img = np.copy(self.transformed_image)
+        # draw_lines(horizontal_lines, img)
+        # imshow_(img)
         
-        horizontal_lines = removeDuplicates(horizontal_lines)
+        # vertical_lines = removeDuplicates(vertical_lines)
+        # horizontal_lines = removeDuplicates(horizontal_lines)
+        
+        # img = np.copy(self.transformed_image)
+        # draw_lines(vertical_lines, img)
+        # # img = np.copy(self.transformed_image)
+        # draw_lines(horizontal_lines, img)
+        # imshow_(img)
+        
+        vertical_lines = restore_missing_lines(vertical_lines)
         horizontal_lines = restore_missing_lines(horizontal_lines)
         
-        
-        img = np.copy(self.transformed_image)
+
+        # img = np.copy(self.transformed_image)
         # draw_lines(vertical_lines, img)
-        img = np.copy(self.transformed_image)
+        # # img = np.copy(self.transformed_image)
         # draw_lines(horizontal_lines, img)
+        # imshow_(img)
+        
+        vertical_lines = add_lines_in_the_edges(vertical_lines, "vertical")
+        horizontal_lines = add_lines_in_the_edges(horizontal_lines, "horizontal")
+        
+        
+        # img = np.copy(self.transformed_image)
+        # draw_lines(vertical_lines, img)
+        # # img = np.copy(self.transformed_image)
+        # draw_lines(horizontal_lines, img)
+        # imshow_(img)
         
         black_stones = get_key_points(self.results, 0, perspective_matrix)
         white_stones = get_key_points(self.results, 6, perspective_matrix)
@@ -102,12 +125,15 @@ class GoGame:
             raise Exception(">>>>>No intersection were found!")
         
         self.update_game(white_stones, black_stones, intersections)
+        print(self.game)
         self.define_ordered_moves()
+        print(self.moves)
         sgf_ = GoSgf('a', 'b', self.not_moves)
         # sgf_ = GoSgf('a', 'b', self.moves)
         _, sgf_n = sgf_.createSgf()
 
         board = GoBoard(sgf_n)
+        
         return board.final_position()
         
         # self.old_moves = self.moves
@@ -142,6 +168,9 @@ class GoGame:
         self.not_moves = []
 
         for stone in white_stones_transf:
+            
+            cv2.circle(self.transformed_image, np.array(stone).astype(dtype=np.int32), 3, (0, 0, 255), 2)
+            
             nearest_corner = None
             closest_distance = 100000
             for inter in transformed_intersections:
@@ -149,11 +178,16 @@ class GoGame:
                 if distance < closest_distance:
                     nearest_corner = tuple(inter)
                     closest_distance = distance
+            print(self.map[nearest_corner])
             self.game[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1
             self.not_moves.append(("W", (self.map[nearest_corner][0], 18 - self.map[nearest_corner][1])))
+            cv2.line(self.transformed_image, (int(stone[0]), int(stone[1])), nearest_corner, (0, 255, 255), 2)
             
                 
         for stone in black_stones_transf:
+            
+            cv2.circle(self.transformed_image, np.array(stone).astype(dtype=np.int32), 3, (0, 0, 255), 2)
+            
             nearest_corner = None
             closest_distance = 100000
             for inter in transformed_intersections:
@@ -161,22 +195,27 @@ class GoGame:
                 if distance < closest_distance:
                     nearest_corner = tuple(inter)
                     closest_distance = distance
+            print(self.map[nearest_corner])
             self.game[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1000
             self.not_moves.append(("B", (self.map[nearest_corner][0], 18 - self.map[nearest_corner][1])))
+            cv2.line(self.transformed_image, (int(stone[0]), int(stone[1])), nearest_corner, (0, 255, 255), 2)
+        imshow_(self.transformed_image)
         
     
     def define_ordered_moves(self):
         difference = self.game - self.old_game
         pos_black = np.where(difference == 1000)
         pos_white = np.where(difference == 1)
-        if len(pos_black[0]) > 1 or len(pos_white[0]) > 1 or len(pos_black[0])+len(pos_white[0]) > 1:
+        print(difference)
+        print(pos_black, pos_white)
+        if len(pos_black[0]) + len(pos_white[0]) > 1:
             print("MORE THAN ONE STONE WAS ADDED")
             return
         if len(pos_black[0]) != 0:
-            self.moves.append(('B', (pos_black[0][0], pos_black[1][0])))
+            self.moves.append(('B', (pos_black[1][0], pos_black[0][0])))
             return
-        if len(pos_black[0]) != 0: 
-            self.moves.append(('W', (pos_white[0][0], pos_white[1][0])))
+        if len(pos_white[0]) != 0: 
+            self.moves.append(('W', (pos_white[1][0], pos_white[0][0])))
             return
         print("no moves detected")        
         
@@ -188,56 +227,8 @@ game = GoGame(model)
 for i in range(1, 15):
 
     frame = cv2.imread(f"img/{i}.jpg")
-    # imshow_(game.process_frame(frame))
+    imshow_(game.process_frame(frame))
     # annotated_frame = game.results[0].plot(labels=False, conf=False)
     # imshow_(annotated_frame)
     # print(game.game)
     # print(game.moves)
-
-
-# %%
-
-# def restore_missing_lines(lines, distance_threshold=10):
-#     # ax=0 : x axis / ax=1 : y axis
-#     lines = np.sort(lines, axis=0)
-#     distances = calculate_distances(lines)
-#     if len(distances) <= 1:
-#         return lines
-#     mean_distance, distances = find_common_distance(distances)
-    
-#     restored_lines = []
-    
-#     for i in range(len(lines) - 1):
-#         print(i, lines)
-#         spacing = (np.linalg.norm(lines[i + 1][:2]-lines[i][:2]) + np.linalg.norm(lines[i + 1][2:]-lines[i][2:]))/2
-        
-#         if is_approx_multiple(spacing, mean_distance, distance_threshold):
-#             print("aprrox_multi")
-#             if spacing >= mean_distance:
-#                 num_missing_lines = round(spacing / mean_distance) - 1
-#                 print("big spacing", num_missing_lines)
-#                 for j in range(1, num_missing_lines + 1):
-#                     if is_vertical(*lines[i]):
-#                         x1 = lines[i][0] + j * mean_distance
-#                         y1 = lines[i][1]
-#                         x2 = lines[i][2] + j * mean_distance
-#                         y2 = lines[i][3]
-#                     else:
-#                         x1 = lines[i][0]
-#                         y1 = lines[i][1] + j * mean_distance
-#                         x2 = lines[i][2]
-#                         y2 = lines[i][3] + j * mean_distance
-#                     restored_lines.append([x1, y1, x2, y2])
-#         else:
-#             print("deleting", spacing, mean_distance)
-#             lines = np.delete(lines, i+1, axis=0)
-#             i -= 1
-  
-  
-#     if len(restored_lines) != 0:
-#         lines = np.append(lines, np.array(restored_lines, dtype=int), axis=0)
-#     lines = np.sort(lines, axis=0)
-    
-#     return lines
-# # %%
-# restore_missing_lines(horizontal_lines)

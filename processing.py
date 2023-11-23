@@ -520,60 +520,54 @@ def is_approx_multiple(value, base, threshold):
     bool
         True if the value is approximately a multiple of the base within the threshold, False otherwise.
     """
-    return abs(value - math.floor(value / base) * base) < threshold
+    if value < base:
+        return (base - value) < threshold
+    return abs((value%base) - base) < threshold or abs(value%base) < threshold
+
+    # return abs(value - math.floor(value / base) * base) < threshold
 
 def restore_missing_lines(lines, distance_threshold=10):
-    """
-    Restore missing lines in a set of lines based on a common distance.
-
-    Args:
-    -----------
-    lines : numpy.ndarray of shape (-1, 4)
-            Array of lines represented by coordinates [x1, y1, x2, y2].
-    distance_threshold : int, optional
-                        Maximum threshold for spacing deviation to consider missing lines (default=10).
-
-    Returns:
-    --------
-    numpy.ndarray
-        Array of lines with restored missing lines.
-    """
     # ax=0 : x axis / ax=1 : y axis
     lines = np.sort(lines, axis=0)
     distances = calculate_distances(lines)
-    
-    # If there are less than or equal to 1 distance, no restoration needed
     if len(distances) <= 1:
         return lines
-    
-    # Find mean distance and distances array after removing outliers
     mean_distance, distances = find_common_distance(distances)
+    
     restored_lines = []
     
-    for i in range(len(lines) - 1):
-        spacing = (np.linalg.norm(lines[i + 1][:2]-lines[i][:2]) + np.linalg.norm(lines[i + 1][2:]-lines[i][2:]))/2
+    i = 0
+    while i < len(lines) - 1:
+        # print(i, lines)
         
+        spacing = (np.linalg.norm(lines[i + 1][:2]-lines[i][:2]) + np.linalg.norm(lines[i + 1][2:]-lines[i][2:]))/2
+        # print(spacing, mean_distance)
         if is_approx_multiple(spacing, mean_distance, distance_threshold):
-            num_missing_lines = round(spacing / mean_distance) - 1
-            
-            for j in range(1, num_missing_lines + 1):
-                if is_vertical(*lines[i]):
-                    x1 = lines[i][0] + j * mean_distance
-                    y1 = lines[i][1]
-                    x2 = lines[i][2] + j * mean_distance
-                    y2 = lines[i][3]
-                else:
-                    x1 = lines[i][0]
-                    y1 = lines[i][1] + j * mean_distance
-                    x2 = lines[i][2]
-                    y2 = lines[i][3] + j * mean_distance
-                restored_lines.append([x1, y1, x2, y2])
-    
-    # Append the restored lines to the original lines array
+            # print("aprrox_multi")
+            if spacing >= mean_distance:
+                num_missing_lines = round(spacing / mean_distance) - 1
+                # print("big spacing", num_missing_lines)
+                for j in range(1, num_missing_lines + 1):
+                    if is_vertical(*lines[i]):
+                        x1 = lines[i][0] + j * mean_distance
+                        y1 = lines[i][1]
+                        x2 = lines[i][2] + j * mean_distance
+                        y2 = lines[i][3]
+                    else:
+                        x1 = lines[i][0]
+                        y1 = lines[i][1] + j * mean_distance
+                        x2 = lines[i][2]
+                        y2 = lines[i][3] + j * mean_distance
+                    restored_lines.append([x1, y1, x2, y2])
+        else:
+            # print("deleting", spacing, mean_distance)
+            lines = np.delete(lines, i+1, axis=0)
+            i -= 1
+        i += 1
+  
+  
     if len(restored_lines) != 0:
         lines = np.append(lines, np.array(restored_lines, dtype=int), axis=0)
-    
-    # Sort the lines array
     lines = np.sort(lines, axis=0)
     
     return lines
@@ -886,10 +880,12 @@ def show_board(model, frame):
 
 def add_lines_in_the_edges(lines, type):
     mean_distance = average_distance(lines)
+    # print(mean_distance)
 
-    if len(lines) != 18:
+    if len(lines) != 18 and len(lines) != 17:
         return lines
     
+    appended = False
     if type == "vertical":
         # 600 being the image size
         left_border =  np.array([0, 0, 0, 600])
@@ -900,19 +896,22 @@ def add_lines_in_the_edges(lines, type):
             x2 = lines[0][2]-mean_distance
             y2 = lines[0][3]
             lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
-        elif line_distance(lines[-1], right_border) > mean_distance:
+            appended = True
+        if line_distance(lines[-1], right_border) > mean_distance:
             x1 = lines[-1][0]+mean_distance
             y1 = lines[-1][1]
             x2 = lines[-1][2]+mean_distance
             y2 = lines[-1][3]  
-            print([[x1, y1, x2, y2]])  
             lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
-        else:
+            appended = True
+            
+        if not appended:
             print("No missing edges in the vertical lines")
 
 
     elif type == "horizontal":
         # 600 being the image size
+        
         top_border =  np.array([0, 0, 600, 0])
         bottom_border = np.array([0, 600, 600, 600])
         if line_distance(lines[0], top_border) > mean_distance:
@@ -921,18 +920,21 @@ def add_lines_in_the_edges(lines, type):
             x2 = lines[0][2]
             y2 = lines[0][3]-mean_distance
             lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
-        elif line_distance(lines[-1], bottom_border) > mean_distance:
+            appended = True
+        if line_distance(lines[-1], bottom_border) > mean_distance:
             x1 = lines[-1][0]
             y1 = lines[-1][1]+mean_distance
             x2 = lines[-1][2]
             y2 = lines[-1][3]+mean_distance   
-            lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
- 
-        else:
+            lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)              
+            appended = True
+            
+        if not appended:
             print("No missing edges in the horizontal lines")
-                
     else:
         print("Please specify a line type")
+    
+
     
     return lines.astype(int)
     
@@ -951,3 +953,48 @@ def average_distance(lines):
     mean_distance = np.average(distances)
     return mean_distance
 # %%
+
+
+
+def imshow_(image):
+    screen_width, screen_height = 1920, 1080  # Replace with your screen resolution or use a library to detect it dynamically
+
+    # Calculate the scaling factors for width and height
+    width_scale = screen_width / float(image.shape[1])
+    height_scale = screen_height / float(image.shape[0])
+
+    # Choose the smaller scaling factor to fit the image within the screen dimensions
+    scale = min(width_scale, height_scale)
+
+    # Resize the image with the calculated scale
+    resized_image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+
+    # Get the dimensions of the resized image
+    window_width, window_height = resized_image.shape[1], resized_image.shape[0]
+
+    # Create a window with the determined size
+    cv2.namedWindow('img', cv2.WINDOW_KEEPRATIO)
+    # cv2.resizeWindow('img', window_width, window_height)
+    cv2.imshow('img', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+
+def draw_lines(lines, img=None, color=(0, 0, 255), thickness=1, draw=False):
+    global image
+    if img is None:
+        img = np.zeros_like(image)
+    for line in lines:
+        x1, y1, x2, y2 = line
+        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+    if draw:
+        imshow_(img)
+
+def draw_points(points, img=None, color=(0, 0, 255), thickness=3, draw=False):
+    global image
+    if img is None:
+        img = np.zeros_like(image)
+    for point in points:
+        cv2.circle(img, point, 3, color, thickness)
+    if draw:
+        imshow_(img)
