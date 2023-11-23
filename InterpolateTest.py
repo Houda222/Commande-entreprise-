@@ -52,7 +52,7 @@ def average_distance(lines):
  #%%   
 model = YOLO('model.pt')
 game = GoGame(model)
-frame = cv2.imread(f"img/{3}.jpg")
+frame = cv2.imread(f"img/{2}.jpg")
 model_results = model(frame)
 
 input_points = get_corners(model_results)
@@ -133,63 +133,6 @@ img = transformed_image.copy()
 daw_points(all_positions, img)
 imshow_(img)
 
-#%%
-import matplotlib.pyplot as plt
-grid_points = all_intersections_test
-x, y = np.array([-2, 0, 4]), np.array([-2, 0, 2, 5])
-
-xg, yg = np.meshgrid(x, y, indexing='ij')
-def ff(x, y):
-    return x**2 + y**2
-data = ff(xg, yg)
-interp = RegularGridInterpolator((x, y), data,
-                                 bounds_error=False, fill_value=None)
-
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-ax.scatter(xg.ravel(), yg.ravel(), data.ravel(),
-           s=60, c='k', label='data')
-
-xx = np.linspace(-4, 9, 31)
-yy = np.linspace(-4, 9, 31)
-X, Y = np.meshgrid(xx, yy, indexing='ij')
-# interpolator
-ax.plot_wireframe(X, Y, interp((X, Y)), rstride=3, cstride=3,
-                  alpha=0.4, color='m', label='linear interp')
-
-# # ground truth
-# ax.plot_wireframe(X, Y, ff(X, Y), rstride=3, cstride=3,
-#                   alpha=0.4, label='ground truth')
-# plt.legend()
-# plt.show()
-
-# %%
-grid_points = all_intersections_test
-x, y = 
-
-xg, yg = np.meshgrid(x, y, indexing='ij')
-
-data = np.ones_like(x)
-interp = RegularGridInterpolator((x, y), data,
-                                 bounds_error=False, fill_value=None)
-
-fig = plt.figure()
-ax = fig.add_subplot()
-ax.scatter(data.ravel(),
-           s=60, c='k', label='data')
-
-xx = np.linspace(-4, 9, 31)
-yy = np.linspace(-4, 9, 31)
-X, Y = np.meshgrid(xx, yy, indexing='ij')
-# interpolator
-ax.plot_wireframe(X, Y, interp((X, Y)), rstride=3, cstride=3,
-                  alpha=0.4, color='m', label='linear interp')
-
-# # ground truth
-# ax.plot_wireframe(X, Y, ff(X, Y), rstride=3, cstride=3,
-#                   alpha=0.4, label='ground truth')
-# plt.legend()
-# plt.show()
 # %%
 
 import matplotlib.pyplot as plt
@@ -228,10 +171,8 @@ for i in range(1, 15):
     step = int(600/19)
     for j in range(0, 20):
         cv2.line(transformed_image, (int(step)*j+6, 0), (int(step)*j+6, 600), color=(0,0,255))
-        cv2.line(transformed_image, (0, int(step)*j+5), (600, int(step)*j+5), color=(0,255,0))
+        cv2.line(transformed_image, (0, int(step)*j+6), (600, int(step)*j+6), color=(0,255,0))
     imshow_(transformed_image)
-
-
 # %%
 
 def assign_positions_grid(intersections):
@@ -241,8 +182,16 @@ def assign_positions_grid(intersections):
     for i in range(0, 20):
         for j in range(0, 20):
             for intersection in intersections:
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
                     grid[(i, j)] = intersection
+                if int(step)*(1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                    grid[(0, j)] = intersection
+                if int(step)*19+6 < intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                    grid[(19, j)] = intersection
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*(1)+6 > intersection[1]:
+                    grid[(i, 0)] = intersection
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*19+7 < intersection[1]:
+                    grid[(i, 19)] = intersection
     return grid
 # %%
 grid = assign_positions_grid(all_intersections)
@@ -304,3 +253,57 @@ for i in range(1, 10):
         cv2.putText(img, f'{key}', np.array(grid[key]).astype(int), fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
     imshow_(img)
 # %%
+from sklearn.cluster import kMeans
+# def assign_stones_to_positions(intersections, stones):
+#     grid = assign_positions_grid(intersections)
+#     map = {}
+#     all_positions = np.concatenate
+#     for key in grid:
+
+# cls
+
+#%%
+grid = assign_positions_grid(all_intersections)
+map = {}
+black_stones = get_key_points(model_results, 0, perspective_matrix)
+white_stones = get_key_points(model_results, 6, perspective_matrix)
+vertical_lines, horizontal_lines = lines_detection(model_results, perspective_matrix)
+
+vertical_lines = removeDuplicates(vertical_lines)
+vertical_lines = restore_missing_lines(vertical_lines)
+
+horizontal_lines = removeDuplicates(horizontal_lines)
+horizontal_lines = restore_missing_lines(horizontal_lines)
+        
+cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
+cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
+
+intersections = detect_intersections(cluster_1, cluster_2, transformed_image)
+#%%
+all_positions = np.concatenate((black_stones, intersections))
+# %%
+clusters = KMeans(361).fit(all_positions)
+# %%
+labels = clusters.labels_
+centroids = clusters.cluster_centers_
+
+# %%
+board = {}
+split_index = len(black_stones)
+
+for i in range(0, split_index):
+    for j in range(split_index, len(all_positions)):
+        if labels[i] == labels[j]:
+            board[tuple(all_positions[j])] = all_positions[i]
+        else:
+            board[tuple(all_positions[j])] = None
+grid = 
+# %%
+img = transformed_image.copy()
+for key in board:
+    if board[key] is not None:
+        daw_points(np.array([board[key]]), img)
+        cv2.putText(img, f'{key}', np.array(board[key]).astype(int), fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
+imshow_(img)
+# %%
+def 
