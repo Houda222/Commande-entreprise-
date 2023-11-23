@@ -1,4 +1,3 @@
-# %%
 import threading
 import copy
 import traceback
@@ -6,7 +5,8 @@ from ultralytics import YOLO
 import cv2
 from processing import show_board
 from GoGame import *
-# %%
+
+
 def processing_thread():
     global ProcessFrame, Process
     while Process:
@@ -61,5 +61,3 @@ while cap.isOpened():
 
 cap.release()
 cv2.destroyAllWindows()
-# %%
-
