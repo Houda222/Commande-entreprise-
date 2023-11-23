@@ -974,3 +974,14 @@ def interpolate_intersections(intersections, interpolate_type='quadratic'):
     all_intersections = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, step) for y in range(int(min_y), int(max_y) + 1, step)])
 
     return all_intersections
+
+def assign_positions_grid(intersections):
+    grid = {}
+    step = int(600/19)
+ 
+    for i in range(0, 20):
+        for j in range(0, 20):
+            for intersection in intersections:
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                    grid[(i, j)] = intersection
+    return grid
