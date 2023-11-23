@@ -93,10 +93,11 @@ class GoBoard:
                 cv2.circle(board, ((col+1)*square_size, (row+1)*square_size), circle_radius, color=stone_color, thickness=-1) # draw the stone
         
         #setting the contour of the last move to a different color
-        last_move = extracted_moves[-1]           
-        stone_color = (0,0,0) if last_move[2] == 'b' else (255, 255, 255)
-        cv2.circle(board, ((last_move[1]+1)*square_size, (last_move[0] + 1)*square_size), circle_radius, color=(0,0,255), thickness=2) 
-        cv2.circle(board, ((last_move[1]+1)*square_size, (last_move[0] + 1)*square_size), circle_radius, color=stone_color, thickness=-1) 
+        if len(extracted_moves) != 0:
+            last_move = extracted_moves[-1]           
+            stone_color = (0,0,0) if last_move[2] == 'b' else (255, 255, 255)
+            cv2.circle(board, ((last_move[1]+1)*square_size, (last_move[0] + 1)*square_size), circle_radius, color=(0,0,255), thickness=2) 
+            cv2.circle(board, ((last_move[1]+1)*square_size, (last_move[0] + 1)*square_size), circle_radius, color=stone_color, thickness=-1) 
 
         return board
 
@@ -292,7 +293,7 @@ class GoSgf:
         return sgf_
     
 
-    def createSgf(self):
+    def createSgf(self, moves):
         """
         Create and Write the sgf file
 
@@ -303,8 +304,7 @@ class GoSgf:
         sgf_filename : str
             name of the sgf file
         """
-
-
+        self.moves = moves
         sgf_moves = self.assembleSgf()
         sgf_filename = f"{self.black}_{self.white}.sgf"
         

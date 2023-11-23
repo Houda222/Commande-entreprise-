@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
 from itertools import combinations
-from mySgf import GoBoard, GoSgf
+from mySgfCopy import GoBoard, GoSgf
 from scipy.interpolate import interp1d
 
 
