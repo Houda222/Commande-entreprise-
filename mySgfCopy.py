@@ -1,7 +1,8 @@
+#%%
 from sgfmill import sgf
 import numpy as np
 import cv2
-
+#%%
 
 class GoBoard:
     """
@@ -329,13 +330,15 @@ class GoSgf:
         
 
 
-
-####example
+# #%%
+# ###example
 # moves = [('B', (9, 9)), ('W', (14, 18)), ('B', (14, 17)), ('W', (13, 17)), ('B', (3, 15)), ('W', (6, 15)), ('B', (14, 15)), ('W', (0, 14)), ('B', (14, 13)), ('W', (13, 13)), ('B', (0, 10)), ('W', (9, 9)), ('B', (10, 9)), ('W', (11, 9))]
-# fichier = GoSgf("ex", "ex", moves)
-# sgf_file, sgf_filename = fichier.createSgf()
-
+# fichier = GoSgf("ex", "ex")
+# sgf_file, sgf_filename = fichier.update_sgf(moves[-1])
+# #%%
 # board = GoBoard(sgf_filename)
 # res = board.final_position()
 # cv2.imshow("result", res)
 # cv2.waitKey(0)
+
+# # %%

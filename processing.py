@@ -355,17 +355,21 @@ def create_board(intersections, board_size=(19,19)):
         
     """
 
-    cleaned_intersections = intersections.tolist()
-    cleaned_intersections.sort(key=lambda x: (x[1], x[0]))
+    sorted_indices = np.lexsort((intersections[:, 0], intersections[:, 1]))
+    cleaned_intersections = intersections[sorted_indices]
+    cleaned_intersections = cleaned_intersections.tolist()
     
     board = {}
     for j in range(0, 19):
         row = cleaned_intersections[:19]
         cleaned_intersections = cleaned_intersections[19:]
         row.sort(key=lambda x: x[0])
+        # print(row)
         for i in range(19):
             if len(row) != 0:
-                board[tuple(row.pop(0))] = (i, j)
+                el = tuple(row.pop(0))
+                board[el] = (i, j)
+                # print(el, (i, j))
     
     return board
 
@@ -907,6 +911,7 @@ def add_lines_in_the_edges(lines, type):
             y2 = lines[-1][3]  
             lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)
             appended = True
+        lines = lines[lines[:, 0].argsort()]
             
         if not appended:
             print("No missing edges in the vertical lines")
@@ -931,6 +936,8 @@ def add_lines_in_the_edges(lines, type):
             y2 = lines[-1][3]+mean_distance   
             lines = np.append(lines, [[x1, y1, x2, y2]], axis=0)              
             appended = True
+        
+        lines = lines[lines[:, 1].argsort()]
             
         if not appended:
             print("No missing edges in the horizontal lines")
@@ -938,7 +945,6 @@ def add_lines_in_the_edges(lines, type):
         print("Please specify a line type")
     
 
-    
     return lines.astype(int)
     
 
@@ -1027,6 +1033,17 @@ def interpolate_intersections(intersections, interpolate_type='quadratic'):
     return all_intersections
 
 
+# def assign_positions_grid(intersections):
+#     grid = {}
+#     step = int(600/19)
+ 
+#     for i in range(0, 20):
+#         for j in range(0, 20):
+#             for intersection in intersections:
+#                 if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+#                     grid[tuple(intersection)] = (i, j)
+#     return grid
+
 def assign_positions_grid(intersections):
     grid = {}
     step = int(600/19)
@@ -1034,6 +1051,14 @@ def assign_positions_grid(intersections):
     for i in range(0, 20):
         for j in range(0, 20):
             for intersection in intersections:
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
                     grid[tuple(intersection)] = (i, j)
+                if int(step)*(1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                    grid[tuple(intersection)] = (0, j)
+                if int(step)*19+6 < intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
+                    grid[tuple(intersection)] = (19, j)
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*(1)+6 > intersection[1]:
+                    grid[tuple(intersection)] = (i, 0)
+                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*19+7 < intersection[1]:
+                    grid[tuple(intersection)] = (i, 19)
     return grid

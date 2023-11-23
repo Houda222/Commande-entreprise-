@@ -308,4 +308,3 @@ for key in board:
         cv2.putText(img, f'{key}', np.array(board[key]).astype(int), fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
 imshow_(img)
 # %%
-def 
