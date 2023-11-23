@@ -119,7 +119,7 @@ class GoGame:
         cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
         cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
         
-        intersections = detect_intersections(cluster_1, cluster_2, self.transformed_image)
+        self.intersections = detect_intersections(cluster_1, cluster_2, self.transformed_image)
         
         if len(intersections) == 0:
             raise Exception(">>>>>No intersection were found!")
@@ -161,7 +161,9 @@ class GoGame:
             and the corresponding board position.
         """
         
-        self.map = create_board(transformed_intersections)
+        draw_points(transformed_intersections, self.transformed_image, True)
+        
+        self.map = assign_positions_grid(transformed_intersections)
         self.old_game = copy.deepcopy(self.game)
 
         transformed_intersections = np.array(list(self.map.keys()))
@@ -182,6 +184,7 @@ class GoGame:
             self.game[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1
             self.not_moves.append(("W", (self.map[nearest_corner][0], 18 - self.map[nearest_corner][1])))
             cv2.line(self.transformed_image, (int(stone[0]), int(stone[1])), nearest_corner, (0, 255, 255), 2)
+            cv2.putText(self.transformed_image, f"{(self.map[nearest_corner])}", nearest_corner, fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
             
                 
         for stone in black_stones_transf:
@@ -199,6 +202,7 @@ class GoGame:
             self.game[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1000
             self.not_moves.append(("B", (self.map[nearest_corner][0], 18 - self.map[nearest_corner][1])))
             cv2.line(self.transformed_image, (int(stone[0]), int(stone[1])), nearest_corner, (0, 255, 255), 2)
+            cv2.putText(self.transformed_image, f"{(self.map[nearest_corner])}", nearest_corner, fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
         imshow_(self.transformed_image)
         
     
@@ -232,3 +236,5 @@ for i in range(1, 15):
     # imshow_(annotated_frame)
     # print(game.game)
     # print(game.moves)
+
+# %%

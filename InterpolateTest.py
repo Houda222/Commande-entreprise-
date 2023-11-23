@@ -257,6 +257,8 @@ for key in grid:
 
     
 # %%
+model = YOLO('model.pt')
+
 for i in range(1, 10):
 
     frame = cv2.imread(f"img/{i}.jpg")

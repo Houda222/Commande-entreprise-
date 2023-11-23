@@ -420,7 +420,8 @@ def define_moves(white_stones_transf, black_stones_transf, transformed_intersect
         and the corresponding board position.
     """
     
-    Board = create_board(transformed_intersections)
+    # Board = create_board(transformed_intersections)
+    Board = assign_positions_grid(transformed_intersections)
     transformed_intersections = np.array(list(Board.keys()))
     moves = []
 
@@ -1034,5 +1035,5 @@ def assign_positions_grid(intersections):
         for j in range(0, 20):
             for intersection in intersections:
                 if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[(i, j)] = intersection
+                    grid[tuple(intersection)] = (i, j)
     return grid
