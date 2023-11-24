@@ -2,8 +2,7 @@ import math
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
-from itertools import combinations
-from mySgf import GoBoard, GoSgf
+from mySgfCopy import GoBoard, GoSgf
 from scipy.interpolate import interp1d
 
 
@@ -810,14 +809,15 @@ def are_corner_inside_box(corner_boxes, board_box):
 def get_corners(results):    
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
 
-    corner_boxes = non_max_suppression(corner_boxes)
+    corner_boxes_ = non_max_suppression(corner_boxes)
+    # corner_boxes_ = ultralytics.utils.ops.non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, multi_label=False, labels=(), max_det=300, nc=0, max_time_img=0.05, max_nms=30000, max_wh=7680)
     
     board_model_edges = results[0].boxes.xyxy[results[0].boxes.cls == 1][0]
     
-    corner_boxes = are_corner_inside_box(corner_boxes, np.array(board_model_edges))
+    corner_boxes = are_corner_inside_box(corner_boxes_, np.array(board_model_edges))
 
     if len(corner_boxes) != 4:
-        raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
+        raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners and {len(corner_boxes_)} corners with NMS")
 
     corner_centers = ((corner_boxes[:,[0, 1]] + corner_boxes[:,[2, 3]])/2)
     # corner_centers = corner_centers
