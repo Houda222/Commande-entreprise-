@@ -2,7 +2,7 @@
 from mySgfCopy import GoBoard, GoSgf
 import numpy as np
 from processing import *
-from ultralytics import YOLO
+from ultralytics import YOLO, utils
 import copy
 #%%
 class GoGame:
@@ -12,6 +12,7 @@ class GoGame:
         self.model = model
         self.sgf = sgf
         self.results = None
+        self.frame = None
         self.moves = []
         self.all_moves = []
         self.old_game = np.zeros((19, 19))
@@ -21,6 +22,7 @@ class GoGame:
         self.annotated_frame = None
     
     def initialize_game(self, frame):
+        self.frame = frame
         self.process_frame(frame)
         self.moves = copy.deepcopy(self.all_moves)
         
@@ -30,6 +32,7 @@ class GoGame:
         return board.final_position()
     
     def main_loop(self, frame):
+        self.frame = frame
         self.process_frame(frame)
         self.define_ordered_moves()
         print(self.moves)

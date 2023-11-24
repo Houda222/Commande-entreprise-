@@ -15,7 +15,7 @@ def processing_thread():
         if not ProcessFrame is None:
             try:
                 if not initialized:
-                    game_plot = game.initialize_game(frame)
+                    game_plot = game.initialize_game(ProcessFrame)
                     initialized = True
                 else:
                     
@@ -23,18 +23,33 @@ def processing_thread():
                 ############ B LE CODE DYAL HOUDA;
                 ############ O sgf_filename HOWA LE NOM DYAL LE FICHER SGF LLI T ENREGISTRA 
                 ############ QUI CORRESPOND A game_plot
-                    game_plot = game.main_loop(frame)
+                    game_plot = game.main_loop(ProcessFrame)
                 # game_plot, sgf_filename = show_board(model, ProcessFrame)
-                # cv2.imshow("master", game_plot)
+                cv2.imshow("master", game_plot)
                 cv2.imshow("annotated", game.annotated_frame)
-                # cv2.imshow("transformed", game.transformed_image)
+                cv2.imshow("transformed", game.transformed_image)
                 
-            except OverflowError as e:
-                print(f"Overflow Error: {e}")
+            # except OverflowError as e:
+            #     print(f"Overflow Error: {e}")
                 
             except Exception as e:
                 print('empty frame', type(e), e.args, e)
-                traceback.print_exc()
+                # traceback.print_exc()
+                exception_info = {
+                    'exception_type': type(e).__name__,
+                    'exception_message': str(e),
+                    'traceback': traceback.format_exc()
+                }
+
+                # Save the frame along with the exception information
+                cv2.imwrite('error_logs/error_frame.jpg', ProcessFrame)
+                cv2.imwrite('error_logs/error_annotated_frame.jpg', game.annotated_frame)
+                
+                
+                # Optionally, you can save the exception information to a file or log it
+                with open('error_logs/error_log.txt', 'w') as log_file:
+                    log_file.write(str(exception_info))
+                cv2.imwrite(f"{e}.jpg", ProcessFrame)
                 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             Process = False
