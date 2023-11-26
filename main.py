@@ -33,23 +33,23 @@ def processing_thread():
             #     print(f"Overflow Error: {e}")
                 
             except Exception as e:
-                print('empty frame', type(e), e.args, e)
-                # traceback.print_exc()
-                exception_info = {
-                    'exception_type': type(e).__name__,
-                    'exception_message': str(e),
-                    'traceback': traceback.format_exc()
-                }
+                # print('empty frame', type(e), e.args, e)
+                traceback.print_exc()
+                # exception_info = {
+                #     'exception_type': type(e).__name__,
+                #     'exception_message': str(e),
+                #     'traceback': traceback.format_exc()
+                # }
 
-                # Save the frame along with the exception information
-                cv2.imwrite('error_logs/error_frame.jpg', ProcessFrame)
-                cv2.imwrite('error_logs/error_annotated_frame.jpg', game.annotated_frame)
+                # # Save the frame along with the exception information
+                # cv2.imwrite('error_logs/error_frame.jpg', ProcessFrame)
+                # cv2.imwrite('error_logs/error_annotated_frame.jpg', game.annotated_frame)
                 
                 
-                # Optionally, you can save the exception information to a file or log it
-                with open('error_logs/error_log.txt', 'w') as log_file:
-                    log_file.write(str(exception_info))
-                cv2.imwrite(f"{e}.jpg", ProcessFrame)
+                # # Optionally, you can save the exception information to a file or log it
+                # with open('error_logs/error_log.txt', 'w') as log_file:
+                #     log_file.write(str(exception_info))
+                # cv2.imwrite(f"{e}.jpg", ProcessFrame)
                 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             Process = False
