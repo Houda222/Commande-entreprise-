@@ -6,6 +6,7 @@ from ultralytics import YOLO, utils
 import copy
 #%%
 class GoGame:
+    STATES = []
     
     def __init__(self, model, sgf):
 
@@ -15,8 +16,8 @@ class GoGame:
         self.frame = None
         self.moves = []
         self.all_moves = []
-        self.old_game = np.zeros((19, 19))
-        self.game = np.zeros((19, 19))
+        self.old_state = np.zeros((19, 19))
+        self.state = np.zeros((19, 19))
         self.map = {}
         self.transformed_image = None
         self.annotated_frame = None
@@ -35,7 +36,7 @@ class GoGame:
         self.frame = frame
         self.process_frame(frame)
         self.define_ordered_moves()
-        print(self.moves)
+        print(len(self.moves), self.moves)
         
         # sgf_ = GoSgf('a', 'b', self.not_moves)
         # _, sgf_n = sgf_.createSgf()
@@ -136,8 +137,8 @@ class GoGame:
         # imshow_(img)
         
         
-        self.old_game = copy.deepcopy(self.game)
-        self.game = np.zeros((19, 19))
+        self.old_state = copy.deepcopy(self.state)
+        self.state = np.zeros((19, 19))
 
         self.all_moves = []
 
@@ -154,7 +155,7 @@ class GoGame:
                     closest_distance = distance
             # cv2.circle(self.transformed_image, np.array(nearest_corner).astype(dtype=np.int32), 3, (0, 255, 0), 2)
             # print("W", stone, self.map[nearest_corner])
-            self.game[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1
+            self.state[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1
             self.all_moves.append(("W", (self.map[nearest_corner][0], 18 - self.map[nearest_corner][1])))
             cv2.line(self.transformed_image, (int(stone[0]), int(stone[1])), nearest_corner, (0, 255, 255), 2)
             # cv2.putText(self.transformed_image, f"{(self.map[nearest_corner])}", nearest_corner, fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
@@ -173,16 +174,17 @@ class GoGame:
                     closest_distance = distance
             # cv2.circle(self.transformed_image, np.array(nearest_corner).astype(dtype=np.int32), 3, (0, 255, 0), 2)
             # print("B", stone, self.map[nearest_corner])
-            self.game[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1000
+            self.state[self.map[nearest_corner][1], self.map[nearest_corner][0]] = 1000
             self.all_moves.append(("B", (self.map[nearest_corner][0], 18 - self.map[nearest_corner][1])))
             cv2.line(self.transformed_image, (int(stone[0]), int(stone[1])), nearest_corner, (0, 255, 255), 2)
             # cv2.putText(self.transformed_image, f"{(self.map[nearest_corner])}", nearest_corner, fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
         
         # imshow_(self.transformed_image)
+        self.STATES.append(self.state)
         
     
     def define_ordered_moves(self):
-        difference = self.game - self.old_game
+        difference = self.state - self.old_state
         pos_black = np.where(difference == 1000)
         pos_white = np.where(difference == 1)
         if len(pos_black[0]) + len(pos_white[0]) > 1:

@@ -808,6 +808,10 @@ def are_corner_inside_box(corner_boxes, board_box):
         
 def get_corners(results):    
     corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
+    
+    if len(corner_boxes) < 4:
+        raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
+
 
     corner_boxes_ = non_max_suppression(corner_boxes)
     # corner_boxes_ = ultralytics.utils.ops.non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, multi_label=False, labels=(), max_det=300, nc=0, max_time_img=0.05, max_nms=30000, max_wh=7680)
