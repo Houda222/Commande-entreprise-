@@ -574,6 +574,8 @@ def restore_missing_lines(lines, distance_threshold=10):
   
     if len(restored_lines) != 0:
         lines = np.append(lines, np.array(restored_lines, dtype=int), axis=0)
+    
+    # Sort the lines array
     lines = np.sort(lines, axis=0)
     
     return lines
@@ -1062,3 +1064,4 @@ def assign_positions_grid(intersections):
                 if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*19+7 < intersection[1]:
                     grid[tuple(intersection)] = (i, 19)
     return grid
+
