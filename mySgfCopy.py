@@ -34,11 +34,11 @@ class GoVisual:
         self.moves = []
         for i, node in enumerate(self.sgf_game.get_main_sequence(), 1):
             color, move = node.get_move()
-            if color is not None and move is not None and not is_stone_captured(move):
+            if color is not None and move is not None:
                 row, col = move
                 self.moves.append((row, col, color)) 
-            if is_stone_captured(sgf_url, i, move):
-                print(f"Stone captured at {move}")
+            # if is_stone_captured(sgf_url, i, move):
+            #     print(f"Stone captured at {move}")
 
         # Get the number of moves 
         self.total_number_of_moves = len(self.moves)
