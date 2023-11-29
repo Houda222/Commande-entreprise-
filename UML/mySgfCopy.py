@@ -1,10 +1,8 @@
 #%%
-from sgfmill import sgf
 import numpy as np
 import cv2
 # import sgf as sgf_
 #%%
-
 class GoVisual:
     """
     class GoVisual: 
@@ -45,6 +43,10 @@ class GoVisual:
                 self.white_stones.append((row, col))
 
     def initialize_param(self, nb_moves=0):
+        
+        if (nb_moves > 0  and self.current_number_of_moves == self.total_number_of_moves) or (nb_moves < 0 and self.current_number_of_moves):
+            return
+       
         self.current_number_of_moves = self.current_number_of_moves + nb_moves
         self.moves = self.game.get_sequence()
         self.total_number_of_moves  = len(self.moves)
@@ -52,8 +54,6 @@ class GoVisual:
         self.get_stones(extracted_moves)
         self.last_move = extracted_moves[-1]
     
- 
-
         
     def drawBoard(self):
         """
@@ -144,19 +144,19 @@ class GoVisual:
         self.initialize_param()
         return self.drawBoard()
 
-    # def current_turn(self):
-    #     """
-    #     Display whose turn to play
+    def current_turn(self):
+        """
+        Display whose turn to play
 
-    #     Returns:
-    #     --------
-    #     string
-    #         The color of the current turn
-    #     """
-    #     if self.last_move[2] == 'b':
-    #         return 'White' 
-    #     elif self.last_move[2] == 'b' or self.current_number_of_moves == 0:
-    #         return 'black'
+        Returns:
+        --------
+        string
+            The color of the current turn
+        """
+        if self.last_move[2].get_stone().name == 'BLACK':
+            return 'WHITE' 
+        elif self.last_move[2].get_stone().name == 'BLACK' or self.current_number_of_moves == 0:
+            return 'BLACK'
         
     def previous(self):
         """
@@ -228,3 +228,5 @@ class GoVisual:
 # cv2.imshow("result", next)
 # cv2.waitKey(0)
 # # %%
+
+# %%
