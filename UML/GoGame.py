@@ -4,8 +4,6 @@ from mySgfCopy import GoSgf
 import sente
 
 
-
-
 class GoGame:
 
     def __init__(self, board_detect):
@@ -19,9 +17,9 @@ class GoGame:
 
 
     def initialize_game(self, frame):
-        # self.frame = frame
-        # self.board_detect.process_frame(frame)
-        # # self.moves = copy.deepcopy(self.all_moves)
+        self.frame = frame
+        self.board_detect.process_frame(frame)
+        # self.moves = copy.deepcopy(self.all_moves)
         
         # _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
         # board = GoBoard(sgf_n)
@@ -34,7 +32,7 @@ class GoGame:
         self.frame = frame
         self.board_detect.process_frame(frame)
         self.define_new_move()
-        print(len(self.moves), self.moves)
+        # print(len(self.moves), self.moves)
             
         _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
 
@@ -43,10 +41,22 @@ class GoGame:
         return board.final_position()
     
     def play_move(self, x, y, stone_color):
+        color = "white" if stone_color == 2 else "black"
         try:
+            
             self.game.play(x, y, sente.stone(stone_color))
-        except sente.IllegalMoveException:
-            raise Exception(f"A violation of go game rules has been found in position {x}, {y}")
+            
+        except sente.exceptions.IllegalMoveException as e:
+            error_message = f"A violation of go game rules has been found in position {x}, {y}\n"
+            if "self-capture" in str(e):
+                raise Exception(error_message + f" --> {color} stone at this position results in self-capture")
+            if "occupied point" in str(e):
+                raise Exception(error_message + " --> The Desired move lies on an occupied point")
+            if "Ko point" in str(e):
+                raise Exception(error_message + " --> The Desired move lies on a Ko point")
+            if "turn" in str(e) and "It is not currently" in str(e):
+                raise Exception(error_message + f"It is not currently {color}'s turn\n")
+            raise Exception(error_message + str(e))
             
     
     def define_new_move(self):
@@ -74,5 +84,7 @@ class GoGame:
             self.moves.append(('W', (white_stone_indices[0][0], 18 - white_stone_indices[0][1])))
             return
         print("no moves detected")
-
+    
+    def get_sgf(self):
+        return sente.sgf.dumps(self.game)
 # %%
