@@ -4,8 +4,6 @@ from mySgfCopy import GoSgf
 import sente
 
 
-
-
 class GoGame:
 
     def __init__(self, board_detect):
@@ -21,7 +19,7 @@ class GoGame:
     def initialize_game(self, frame):
         self.frame = frame
         self.board_detect.process_frame(frame)
-        # # self.moves = copy.deepcopy(self.all_moves)
+        # self.moves = copy.deepcopy(self.all_moves)
         
         # _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
         # board = GoBoard(sgf_n)
@@ -49,7 +47,7 @@ class GoGame:
             self.game.play(x, y, sente.stone(stone_color))
             
         except sente.exceptions.IllegalMoveException as e:
-            error_message = f"A violation of go game rules has been found in position {x}, {y} \n"
+            error_message = f"A violation of go game rules has been found in position {x}, {y}\n"
             if "self-capture" in str(e):
                 raise Exception(error_message + f" --> {color} stone at this position results in self-capture")
             if "occupied point" in str(e):
@@ -57,7 +55,7 @@ class GoGame:
             if "Ko point" in str(e):
                 raise Exception(error_message + " --> The Desired move lies on a Ko point")
             if "turn" in str(e) and "It is not currently" in str(e):
-                raise Exception(error_message + "It is not currently {color}'s turn\n")
+                raise Exception(error_message + f"It is not currently {color}'s turn\n")
             raise Exception(error_message + str(e))
             
     
