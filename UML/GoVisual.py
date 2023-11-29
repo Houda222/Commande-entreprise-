@@ -1,9 +1,6 @@
-#%%
-from sgfmill import sgf
 import numpy as np
 import cv2
-# import sgf as sgf_
-#%%
+
 
 class GoVisual:
     """
