@@ -2,6 +2,7 @@
 from sgfmill import sgf
 import numpy as np
 import cv2
+import sgf as sgf_
 #%%
 
 class GoBoard:
@@ -31,11 +32,13 @@ class GoBoard:
 
         # Extract the game moves
         self.moves = []
-        for node in self.sgf_game.get_main_sequence():
+        for i, node in enumerate(self.sgf_game.get_main_sequence(), 1):
             color, move = node.get_move()
-            if color is not None and move is not None:
+            if color is not None and move is not None and not is_stone_captured(move):
                 row, col = move
                 self.moves.append((row, col, color)) 
+            if is_stone_captured(sgf_url, i, move):
+                print(f"Stone captured at {move}")
 
         # Get the number of moves 
         self.total_number_of_moves = len(self.moves)
@@ -327,7 +330,106 @@ class GoSgf:
     
 
     
-        
+# def is_stone_captured(move):
+    
+#         if coordinate in node.properties.get('B', []) or coordinate in node.properties.get('W', []):
+#             # Check if the stone has liberties
+#             liberties = get_liberties(node, coordinate)
+#             return len(liberties) == 0
+
+#         return False
+def is_stone_captured(color, move):
+    """
+    Check if a stone is captured after a given move.
+
+    Parameters:
+    - game: The game object.
+    - move: The move to be checked.
+
+    Returns:
+    - True if a stone is captured, False otherwise.
+    """
+    # Extract the color and coordinates of the move
+    (row, col) = move
+
+    # Get the opponent's color
+    opponent_color = 'b' if color == 'w' else 'w'
+
+    # Check if any adjacent opponent stones are captured
+    captured_stones = []
+    for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        new_row, new_col = row + dr, col + dc
+
+        if 1 <= new_row <= self.board_size and 1 <= new_col <= self.board_size:
+            neighbor_color, _ = game.get_board().get((new_row, new_col), (None, None))
+
+            # If the neighbor is an opponent's stone and it's part of a captured group,
+            # add it to the list of captured stones
+            if neighbor_color == opponent_color and game.get_group((new_row, new_col)) is None:
+                captured_stones.extend(game.get_captured_stones((new_row, new_col)))
+
+    return len(captured_stones) > 0
+
+# Usage example:
+# Assuming that you have a Game object called 'game' and a move tuple called 'move'
+# is_stone_captured(game, move)
+
+def get_liberties(node, coordinate):
+    # Extract the board state from the SGF node
+    board_size = int(node.properties.get('SZ', ['19'])[0])  # Assuming a default size of 19x19
+    board = [[' ' for _ in range(board_size)] for _ in range(board_size)]
+
+    # Fill in the stones from the SGF node
+    for color, positions in [('B', node.properties.get('B', [])), ('W', node.properties.get('W', []))]:
+        for pos in positions:
+            row, col = sgf_coordinates_to_indices(pos)
+            board[row][col] = color
+
+    # Find the group to which the stone belongs
+    group = find_group(board, coordinate)
+
+    # Get liberties of the group
+    liberties = set()
+    for stone in group:
+        liberties.update(get_adjacent_empty_positions(board, stone))
+
+    return liberties
+
+def sgf_coordinates_to_indices(sgf_coordinate):
+    col = ord(sgf_coordinate[0].upper()) - ord('A')
+    row = int(sgf_coordinate[1:]) - 1
+    return row, col
+
+def find_group(board, start_position):
+    color = board[start_position[0]][start_position[1]]
+    group = set()
+    visited = set()
+
+    def dfs(position):
+        if position in visited or board[position[0]][position[1]] != color:
+            return
+        visited.add(position)
+        group.add(position)
+
+        for neighbor in get_adjacent_positions(position, board_size=len(board)):
+            dfs(neighbor)
+
+    dfs(start_position)
+    return group
+
+def get_adjacent_positions(position, board_size):
+    row, col = position
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    adjacent_positions = [(row + dr, col + dc) for dr, dc in directions]
+
+    return [(r, c) for r, c in adjacent_positions if 0 <= r < board_size and 0 <= c < board_size]
+
+def get_adjacent_empty_positions(board, position):
+    empty_positions = []
+    for neighbor in get_adjacent_positions(position, board_size=len(board)):
+        if board[neighbor[0]][neighbor[1]] == ' ':
+            empty_positions.append(neighbor)
+    return empty_positions
 
 
 # #%%
@@ -340,5 +442,3 @@ class GoSgf:
 # res = board.final_position()
 # cv2.imshow("result", res)
 # cv2.waitKey(0)
-
-# # %%

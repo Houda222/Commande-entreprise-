@@ -299,7 +299,7 @@ for i in range(0, split_index):
             board[tuple(all_positions[j])] = all_positions[i]
         else:
             board[tuple(all_positions[j])] = None
-grid = 
+# grid = 
 # %%
 img = transformed_image.copy()
 for key in board:
@@ -347,7 +347,7 @@ def get_liberties(node, coordinate):
     return liberties
 
 def sgf_coordinates_to_indices(sgf_coordinate):
-    col = ord(su[0].upper()) - ord('A')
+    col = ord(sgf_coordinate[0].upper()) - ord('A')
     row = int(sgf_coordinate[1:]) - 1
     return row, col
 

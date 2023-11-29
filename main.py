@@ -4,7 +4,7 @@ import traceback
 from ultralytics import YOLO
 import cv2
 from processing import show_board
-from GoGame import *
+from GoGame_v1 import *
 
 
 def processing_thread():
@@ -26,7 +26,7 @@ def processing_thread():
                     game_plot = game.main_loop(ProcessFrame)
                 # game_plot, sgf_filename = show_board(model, ProcessFrame)
                 cv2.imshow("master", game_plot)
-                cv2.imshow("annotated", game.annotated_frame)
+                # cv2.imshow("annotated", game.annotated_frame)
                 cv2.imshow("transformed", game.transformed_image)
                 
             # except OverflowError as e:
