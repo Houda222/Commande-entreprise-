@@ -61,7 +61,19 @@ class GoVisual:
         self.get_stones(self.update_moves(self.game.numpy(["black_stones", "white_stones"]), self.game.get_sequence()))
 
         if nb_moves<0:
+            # if nb_moves == -len(self.game.get_sequence())+1:
+            #     self.deleted_moves = self.moves[nb_moves:] + self.deleted_moves
+            #     self.game.step_up(-nb_moves)
+            #     self.moves = self.game.get_sequence()
+            #     self.board = self.game.numpy(["black_stones", "white_stones"])
+            #     self.get_stones(self.update_moves(self.board, self.game.get_sequence()))
+ 
             self.deleted_moves = self.moves[nb_moves:] + self.deleted_moves
+            self.unique_deleted_moves = []
+            for move in self.deleted_moves:
+                if move not in self.unique_deleted_moves:
+                    self.unique_deleted_moves.append(move)
+
             self.game.step_up(-nb_moves)
             self.moves = self.game.get_sequence()
             self.board = self.game.numpy(["black_stones", "white_stones"])
@@ -230,54 +242,56 @@ g.play(4,3)
 
 
 
-# # %%
-# board = GoVisual(g)
-# res = board.final_position()
-# cv2.imshow("result", res)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-
-# # %%
-# previous = board.previous()
-# cv2.imshow("result", previous)
-
-# cv2.waitKey(0)
-
-
-# cv2.destroyAllWindows()
+# %%
+board = GoVisual(g)
+res = board.final_position()
+cv2.imshow("result", res)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 
 
-# #%%
-# next = board.next()
-# cv2.imshow("result", next)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+# %%
+previous = board.previous()
+cv2.imshow("result", previous)
+
+cv2.waitKey(0)
 
 
-# #%%
-# next = board.next()
-# cv2.imshow("result", next)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-# # %%
-# init = board.initial_position()
-# cv2.imshow("result", init)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-# # %%
-# next = board.next()
-# cv2.imshow("result", next)
+cv2.destroyAllWindows()
 
 
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-# # %%
-# res = board.final_position()
-# cv2.imshow("result", res)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-# # %%
+
+#%%
+next = board.next()
+cv2.imshow("result", next)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+#%%
+next = board.next()
+cv2.imshow("result", next)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# %%
+init = board.initial_position()
+cv2.imshow("result", init)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# %%
+next = board.next()
+cv2.imshow("result", next)
+
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+# %%
+res = board.final_position()
+cv2.imshow("result", res)
+cv2.waitKey(0)
+
+cv2.destroyAllWindows()
+# %%
