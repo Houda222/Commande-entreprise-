@@ -5,7 +5,7 @@ from ultralytics import YOLO
 import cv2
 from GoGame import *
 from GoBoard import *
-from GoVisual import *
+from GoVisualCopy import *
 
 
 def processing_thread():
