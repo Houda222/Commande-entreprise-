@@ -242,6 +242,7 @@ g.play(4,3)
 
 
 
+
 # %%
 board = GoVisual(g)
 res = board.final_position()
@@ -251,47 +252,51 @@ cv2.destroyAllWindows()
 
 
 
-# %%
-previous = board.previous()
-cv2.imshow("result", previous)
 
-cv2.waitKey(0)
+# # %%
+# previous = board.previous()
+# cv2.imshow("result", previous)
 
-
-cv2.destroyAllWindows()
+# cv2.waitKey(0)
 
 
-
-#%%
-next = board.next()
-cv2.imshow("result", next)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# cv2.destroyAllWindows()
 
 
-#%%
-next = board.next()
-cv2.imshow("result", next)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 
-# %%
-init = board.initial_position()
-cv2.imshow("result", init)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# %%
-next = board.next()
-cv2.imshow("result", next)
+# #%%
+# next = board.next()
+# cv2.imshow("result", next)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
 
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-# %%
-res = board.final_position()
-cv2.imshow("result", res)
-cv2.waitKey(0)
+# #%%
+# next = board.next()
+# cv2.imshow("result", next)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
-cv2.destroyAllWindows()
+# # %%
+# init = board.initial_position()
+# cv2.imshow("result", init)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+# # %%
+# next = board.next()
+# cv2.imshow("result", next)
+
+
+
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+# # %%
+# res = board.final_position()
+# cv2.imshow("result", res)
+# cv2.waitKey(0)
+
+# cv2.destroyAllWindows()
+# # %%
+
 # %%
