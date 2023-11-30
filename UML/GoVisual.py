@@ -143,6 +143,7 @@ class GoVisual:
             The resulted board drawn with all the played moves 
         """
         self.initialize_param()
+        self.current_number_of_moves = self.total_number_of_moves
         return self.drawBoard()
 
     def current_turn(self):
@@ -182,8 +183,12 @@ class GoVisual:
         """
         self.initialize_param(1)
         return self.drawBoard()
+    
+    # def current_position(self):
+    #     self.initialize_param(1)
+    #     return self.drawBoard()
 
-
+    
 
 # # %%
 # import sente

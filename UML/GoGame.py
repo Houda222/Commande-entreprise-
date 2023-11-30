@@ -32,8 +32,10 @@ class GoGame:
         self.board_detect.process_frame(frame)
         self.define_new_move()
         # print(len(self.moves), self.moves)
-        
-        return self.go_visual.final_position()
+        print("before")
+        test = self.go_visual.final_position()
+        print("after")
+        return test
     
     def play_move(self, x, y, stone_color):
         color = "white" if stone_color == 2 else "black"

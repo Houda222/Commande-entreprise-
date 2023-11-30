@@ -400,55 +400,6 @@ def detect_intersections(cluster_1, cluster_2, image):
     return np.array(intersections)
 
 
-    
-def define_moves(white_stones_transf, black_stones_transf, transformed_intersections):
-    """
-    Define game moves based on the positions of white and black stones.
-
-    Args:
-    -----------
-    white_stones_transf : numpy.ndarray
-                          Array of coordinates representing transformed positions of white stones.
-    black_stones_transf : numpy.ndarray
-                          Array of coordinates representing transformed positions of black stones.
-    transformed_intersections : numpy.ndarray
-                                Array of perspective transformed intersection coordinates.
-
-    Returns:
-    --------
-    list : python list
-        List of moves, where each move is a tuple containing a color ('W' for white or 'B' for black)
-        and the corresponding board position.
-    """
-    
-    # Board = create_board(transformed_intersections)
-    Board = assign_positions_grid(transformed_intersections)
-    transformed_intersections = np.array(list(Board.keys()))
-    moves = []
-
-    for stone in white_stones_transf:
-        nearest_corner = None
-        closest_distance = 100000
-        for inter in transformed_intersections:
-            distance = math.dist(inter, stone)
-            if distance < closest_distance:
-                nearest_corner = tuple(inter)
-                closest_distance = distance
-        moves.append(("W", (Board[nearest_corner][0], 18 - Board[nearest_corner][1])))
-          
-            
-    for stone in black_stones_transf:
-        nearest_corner = None
-        closest_distance = 100000
-        for inter in transformed_intersections:
-            distance = math.dist(inter, stone)
-            if distance < closest_distance:
-                nearest_corner = tuple(inter)
-                closest_distance = distance
-        moves.append(("B", (Board[nearest_corner][0], 18 - Board[nearest_corner][1])))
-        
-    return moves
-
 def calculate_distances(lines):
     """
     Calculate distances between consecutive lines.
@@ -846,35 +797,6 @@ def get_key_points(results, class_, perspective_matrix, output_edge=600):
             return key_points_transf[(key_points_transf[:, 0:2] >= 0).all(axis=1) & (key_points_transf[:, 0:2] <= output_edge).all(axis=1)]
 
     return key_points
-
-
-
-def process_frame(model, frame):
-    results = model(frame)
-    input_points = get_corners(results)
-
-    output_edge = 600
-    output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
-
-    perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
-    transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
-    
-    vertical_lines, horizontal_lines = lines_detection(results, perspective_matrix)
-    
-    black_stones = get_key_points(results, 0, perspective_matrix)
-    white_stones = get_key_points(results, 6, perspective_matrix)
-
-    cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
-    cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
-    
-    intersections = detect_intersections(cluster_1, cluster_2, transformed_image)
-    
-    if len(intersections) == 0:
-        raise Exception(">>>>>No intersection were found!")
-        
-    moves = define_moves(white_stones, black_stones, intersections)
-    
-    return moves
 
 
 #####################################3
