@@ -24,7 +24,7 @@ class GoGame:
         # if not self.game.get_active_player().name == current_player:
         #     self.game.pss()
 
-        # test = self.go_visual.final_position()
+        # return self.go_visual.final_position()
         return self.main_loop(frame)
     
     
@@ -32,11 +32,8 @@ class GoGame:
         self.frame = frame
         self.board_detect.process_frame(frame)
         self.define_new_move()
-        # print(len(self.moves), self.moves)
-        print(self.game)
-        test = self.go_visual.final_position()
-        print("after")
-        return test
+        
+        return self.go_visual.final_position()
     
     def play_move(self, x, y, stone_color):
         color = "white" if stone_color == 2 else "black"
@@ -65,10 +62,10 @@ class GoGame:
         black_stone_indices = np.argwhere(difference[:, :, 0] == 1)
         white_stone_indices = np.argwhere(difference[:, :, 1] == 1)
         
-        print("black", np.argwhere(detected_state[:, :, 0] == 1))
-        print("black", np.argwhere(current_state[:, :, 0] == 1))
-        print("white", np.argwhere(detected_state[:, :, 1] == 1))
-        print("white", np.argwhere(current_state[:, :, 1] == 1))
+        # print("black", np.argwhere(detected_state[:, :, 0] == 1))
+        # print("black", np.argwhere(current_state[:, :, 0] == 1))
+        # print("white", np.argwhere(detected_state[:, :, 1] == 1))
+        # print("white", np.argwhere(current_state[:, :, 1] == 1))
         
         if len(black_stone_indices) + len(white_stone_indices) > 1:
             print("MORE THAN ONE STONE WAS ADDED")
@@ -89,19 +86,7 @@ class GoGame:
         black_stone_indices = np.argwhere(detected_state[:, :, 0] == 1)
         white_stone_indices = np.argwhere(detected_state[:, :, 1] == 1)
         
-        if len(black_stone_indices) + len(white_stone_indices) <= 1:
-            if len(black_stone_indices) == 1:
-                self.current_player = "BLACK"
-            else:
-                self.current_player = "WHITE"
-        else:
-            self.current_player = None
-        
-        print(black_stone_indices)
-        i = 0
         for stone in black_stone_indices:
-            print(i)
-            i += 1
             self.play_move(stone[0] + 1, stone[1] + 1, 1)
             self.game.pss()
         
@@ -111,7 +96,6 @@ class GoGame:
             self.play_move(stone[0] + 1, stone[1] + 1, 2)
             self.game.pss()
         
-        self.game.pss()
         self.game.pss()
             
         

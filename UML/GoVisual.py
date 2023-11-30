@@ -20,7 +20,7 @@ class GoVisual:
             directory of the sgf file
         """
         self.game = game
-        self.moves = self.game.get_sequence()
+        self.moves = self.get_moves()
         self.total_number_of_moves  = len(self.moves)
         self.board_size = 19
         self.current_number_of_moves = self.total_number_of_moves
@@ -58,7 +58,7 @@ class GoVisual:
 
     def initialize_param(self, nb_moves=0):
        
-        self.get_stones(self.update_moves(self.game.numpy(["black_stones", "white_stones"]), self.game.get_sequence()))
+        self.get_stones(self.update_moves(self.game.numpy(["black_stones", "white_stones"]), self.get_moves()))
 
         if nb_moves<0:
             # if nb_moves == -len(self.game.get_sequence())+1:
@@ -75,9 +75,9 @@ class GoVisual:
                     self.unique_deleted_moves.append(move)
 
             self.game.step_up(-nb_moves)
-            self.moves = self.game.get_sequence()
+            self.moves = self.get_moves()
             self.board = self.game.numpy(["black_stones", "white_stones"])
-            self.get_stones(self.update_moves(self.board, self.game.get_sequence()))
+            self.get_stones(self.update_moves(self.board, self.get_moves()))
 
         elif nb_moves>0:
             if len(self.deleted_moves) != 0 :
@@ -88,13 +88,22 @@ class GoVisual:
                     self.deleted_moves.pop(0)
 
                 self.board = self.game.numpy(["black_stones", "white_stones"])
-                self.moves = self.game.get_sequence()
+                self.moves = self.get_moves()
                 self.get_stones(self.update_moves(self.board, self.moves))
 
-        if self.game.get_sequence() != []:
-            self.last_move = self.game.get_sequence()[-1]
+        if self.get_moves() != []:
+            self.last_move = self.get_moves()[-1]
     
-        
+    
+    def get_moves(self):
+        moves = []
+        for move in self.game.get_sequence():
+            if move.get_x() == 19 and move.get_y() == 19:
+                continue
+            moves.append(move)
+        return moves
+    
+
     def drawBoard(self):
         """
         Draw the board up to a certain number of moves
@@ -169,7 +178,7 @@ class GoVisual:
         numpy array
             The resulted board drawn with only the first played move
         """
-        self.initialize_param(-len(self.game.get_sequence())+1)
+        self.initialize_param(-len(self.get_moves())+1)
         return self.drawBoard()
 
     def final_position(self):
