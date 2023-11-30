@@ -1,5 +1,5 @@
 from processing import *
-from GoVisual import *
+from GoVisualCopy import *
 import copy
 import sente
 
@@ -97,7 +97,11 @@ class GoGame:
         else:
             self.current_player = None
         
+        print(black_stone_indices)
+        i = 0
         for stone in black_stone_indices:
+            print(i)
+            i += 1
             self.play_move(stone[0] + 1, stone[1] + 1, 1)
             self.game.pss()
         
