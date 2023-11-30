@@ -1,8 +1,15 @@
+<<<<<<< HEAD:UML/mySgfCopy.py
 #%%
 import numpy as np
 import cv2
 # import sgf as sgf_
 #%%
+=======
+import numpy as np
+import cv2
+
+
+>>>>>>> f4a3c3c87ae728180660f831e4ea103b5cd78893:UML/GoVisual.py
 class GoVisual:
     """
     class GoVisual: 
@@ -181,7 +188,7 @@ class GoVisual:
         """
         self.initialize_param(1)
         return self.drawBoard()
-        
+
 
 
 # # %%
