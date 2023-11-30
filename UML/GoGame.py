@@ -14,7 +14,7 @@ class GoGame:
         self.current_player = None
 
 
-    def initialize_game(self, frame, current_player): #current_player = "BLACK" or "WHITE"
+    def initialize_game(self, frame, current_player="BLACK"): #current_player = "BLACK" or "WHITE"
         self.moves = []
         self.current_player = current_player
         
@@ -33,7 +33,7 @@ class GoGame:
         self.board_detect.process_frame(frame)
         self.define_new_move()
         # print(len(self.moves), self.moves)
-        print("before")
+        print(self.game)
         test = self.go_visual.final_position()
         print("after")
         return test

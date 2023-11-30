@@ -103,8 +103,7 @@ class GoVisual:
         
         #set up the board's background
         board =np.full(((self.board_size+1)*square_size, (self.board_size+1)*square_size, 3), (69, 166, 245), dtype=np.uint8)
-        board2 = np.zeros((self.board_size, self.board_size))
-        
+
         # Draw lines for the board grid
         
         # for i in range(board_size):
