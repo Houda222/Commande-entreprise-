@@ -5,6 +5,7 @@ from ultralytics import YOLO
 import cv2
 from GoGame import *
 from GoBoard import *
+from GoVisual import *
 
 
 def processing_thread():
@@ -57,8 +58,10 @@ def processing_thread():
 
 
 model = YOLO('model.pt')
+game = sente.Game()
+go_visual = GoVisual(game)
 go_board = GoBoard(model)
-game = GoGame(go_board)
+game = GoGame(game, go_board, go_visual)
 
 ProcessFrame = None
 Process = True

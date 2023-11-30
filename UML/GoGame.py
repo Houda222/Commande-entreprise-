@@ -1,31 +1,31 @@
 from processing import *
+from GoVisual import *
 import copy
-from mySgfCopy import GoSgf
 import sente
 
 
 class GoGame:
 
-    def __init__(self, board_detect):
-        self.history = []
+    def __init__(self, game, board_detect, go_visual):
         self.moves = []
         self.board_detect = board_detect
-        self.current_state = []
-        self.sgf = GoSgf("p1", "p2")
-        # self.visual = GoVisual(self.sgf)
-        self.game = sente.Game()
+        self.go_visual = go_visual
+        self.game = game
+        self.current_player = None
 
 
-    def initialize_game(self, frame):
+    def initialize_game(self, frame, current_player): #current_player = "BLACK" or "WHITE"
+        self.moves = []
+        self.current_player = current_player
+        
         self.frame = frame
         self.board_detect.process_frame(frame)
-        # self.moves = copy.deepcopy(self.all_moves)
-        
-        # _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
-        # board = GoBoard(sgf_n)
-        
-        # return board.final_position()
-        return self.main_loop(frame)
+        self.populate_game()
+        if not self.game.get_active_player().name == current_player:
+            self.game.pss()
+
+        test = self.go_visual.final_position()
+        return test
     
     
     def main_loop(self, frame):
@@ -33,12 +33,10 @@ class GoGame:
         self.board_detect.process_frame(frame)
         self.define_new_move()
         # print(len(self.moves), self.moves)
-            
-        _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
-
-        board = GoBoard(sgf_n)
-        
-        return board.final_position()
+        print("before")
+        test = self.go_visual.final_position()
+        print("after")
+        return test
     
     def play_move(self, x, y, stone_color):
         color = "white" if stone_color == 2 else "black"
@@ -84,6 +82,36 @@ class GoGame:
             self.moves.append(('W', (white_stone_indices[0][0], 18 - white_stone_indices[0][1])))
             return
         print("no moves detected")
+    
+    def populate_game(self):
+        detected_state = np.transpose(self.board_detect.get_state(), (1, 0, 2))
+        
+        black_stone_indices = np.argwhere(detected_state[:, :, 0] == 1)
+        white_stone_indices = np.argwhere(detected_state[:, :, 1] == 1)
+        
+        if len(black_stone_indices) + len(white_stone_indices) <= 1:
+            if len(black_stone_indices) == 1:
+                self.current_player = "BLACK"
+            else:
+                self.current_player = "WHITE"
+        else:
+            self.current_player = None
+        
+        for stone in black_stone_indices:
+            self.play_move(stone[0] + 1, stone[1] + 1, 1)
+            self.game.pss()
+        
+        self.game.pss()
+        
+        for stone in white_stone_indices:
+            self.play_move(stone[0] + 1, stone[1] + 1, 2)
+            self.game.pss()
+        
+        self.game.pss()
+        self.game.pss()
+            
+        
+            
     
     def get_sgf(self):
         return sente.sgf.dumps(self.game)

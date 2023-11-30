@@ -2,8 +2,6 @@ import math
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
-from mySgfCopy import GoBoard, GoSgf
-from scipy.interpolate import interp1d
 
 
 
@@ -401,55 +399,6 @@ def detect_intersections(cluster_1, cluster_2, image):
     
     return np.array(intersections)
 
-
-    
-def define_moves(white_stones_transf, black_stones_transf, transformed_intersections):
-    """
-    Define game moves based on the positions of white and black stones.
-
-    Args:
-    -----------
-    white_stones_transf : numpy.ndarray
-                          Array of coordinates representing transformed positions of white stones.
-    black_stones_transf : numpy.ndarray
-                          Array of coordinates representing transformed positions of black stones.
-    transformed_intersections : numpy.ndarray
-                                Array of perspective transformed intersection coordinates.
-
-    Returns:
-    --------
-    list : python list
-        List of moves, where each move is a tuple containing a color ('W' for white or 'B' for black)
-        and the corresponding board position.
-    """
-    
-    # Board = create_board(transformed_intersections)
-    Board = assign_positions_grid(transformed_intersections)
-    transformed_intersections = np.array(list(Board.keys()))
-    moves = []
-
-    for stone in white_stones_transf:
-        nearest_corner = None
-        closest_distance = 100000
-        for inter in transformed_intersections:
-            distance = math.dist(inter, stone)
-            if distance < closest_distance:
-                nearest_corner = tuple(inter)
-                closest_distance = distance
-        moves.append(("W", (Board[nearest_corner][0], 18 - Board[nearest_corner][1])))
-          
-            
-    for stone in black_stones_transf:
-        nearest_corner = None
-        closest_distance = 100000
-        for inter in transformed_intersections:
-            distance = math.dist(inter, stone)
-            if distance < closest_distance:
-                nearest_corner = tuple(inter)
-                closest_distance = distance
-        moves.append(("B", (Board[nearest_corner][0], 18 - Board[nearest_corner][1])))
-        
-    return moves
 
 def calculate_distances(lines):
     """
@@ -850,43 +799,6 @@ def get_key_points(results, class_, perspective_matrix, output_edge=600):
     return key_points
 
 
-
-def process_frame(model, frame):
-    results = model(frame)
-    input_points = get_corners(results)
-
-    output_edge = 600
-    output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
-
-    perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
-    transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
-    
-    vertical_lines, horizontal_lines = lines_detection(results, perspective_matrix)
-    
-    black_stones = get_key_points(results, 0, perspective_matrix)
-    white_stones = get_key_points(results, 6, perspective_matrix)
-
-    cluster_1 = vertical_lines[(vertical_lines<=600).all(axis=1) & (vertical_lines>=0).all(axis=1)]
-    cluster_2 = horizontal_lines[(horizontal_lines<=600).all(axis=1) & (horizontal_lines>=0).all(axis=1)]
-    
-    intersections = detect_intersections(cluster_1, cluster_2, transformed_image)
-    
-    if len(intersections) == 0:
-        raise Exception(">>>>>No intersection were found!")
-        
-    moves = define_moves(white_stones, black_stones, intersections)
-    
-    return moves
-
-
-def show_board(model, frame):
-    moves = process_frame(model, frame)
-    sgf_ = GoSgf('a', 'b', moves)
-    _, sgf_n = sgf_.createSgf()
-
-    board = GoBoard(sgf_n)
-    return board.final_position(), sgf_n
-
 #####################################3
 # %%
 ###################################
@@ -1016,56 +928,4 @@ def draw_points(points, img=None, color=(0, 0, 255), thickness=3, draw=False):
     if draw:
         imshow_(img)
 
-
-def interpolate_intersections(intersections, interpolate_type='quadratic'):
-    
-    # Separate x and y coordinates for interpolation
-    x_coords, y_coords = zip(*intersections)
- 
-    # Polynomial interpolation function for x and y coordinates
-    poly_interp_x = interp1d(x_coords, y_coords, kind=interpolate_type, fill_value="extrapolate")
-    poly_interp_y = interp1d(y_coords, x_coords, kind=interpolate_type, fill_value="extrapolate")
-
-    # Determine grid bounds
-    min_x, max_x = min(x_coords), max(x_coords)
-    min_y, max_y = min(y_coords), max(y_coords)
-
-    #define the step 
-    step = 32 #change to average distance between lines
-
-    # Generate positions for all points on the grid
-    all_intersections = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, step) for y in range(int(min_y), int(max_y) + 1, step)])
-
-    return all_intersections
-
-
-# def assign_positions_grid(intersections):
-#     grid = {}
-#     step = int(600/19)
- 
-#     for i in range(0, 20):
-#         for j in range(0, 20):
-#             for intersection in intersections:
-#                 if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-#                     grid[tuple(intersection)] = (i, j)
-#     return grid
-
-def assign_positions_grid(intersections):
-    grid = {}
-    step = int(600/19)
- 
-    for i in range(0, 20):
-        for j in range(0, 20):
-            for intersection in intersections:
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (i, j)
-                if int(step)*(1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (0, j)
-                if int(step)*19+6 < intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (19, j)
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*(1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (i, 0)
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*19+7 < intersection[1]:
-                    grid[tuple(intersection)] = (i, 19)
-    return grid
 
