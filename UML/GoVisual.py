@@ -76,8 +76,7 @@ class GoVisual:
         
         #set up the board's background
         board =np.full(((self.board_size+1)*square_size, (self.board_size+1)*square_size, 3), (69, 166, 245), dtype=np.uint8)
-        board2 = np.zeros((self.board_size, self.board_size))
-        
+
         # Draw lines for the board grid
         
         # for i in range(board_size):
@@ -100,13 +99,11 @@ class GoVisual:
         # Draw stones
         for stone in self.black_stones:
             row, col = stone
-            board2[row, col] = 1
             cv2.circle(board, ((col+1)*square_size, (row+1)*square_size), circle_radius, color=(66, 66, 66), thickness=2) # draw the edge
             cv2.circle(board, ((col+1)*square_size, (row+1)*square_size), circle_radius, color=(0, 0, 0), thickness=-1) # draw the stone
 
         for stone in self.white_stones:
             row, col = stone
-            board2[row, col] = 1
             cv2.circle(board, ((col+1)*square_size, (row+1)*square_size), circle_radius, color=(66, 66, 66), thickness=2) # draw the edge
             cv2.circle(board, ((col+1)*square_size, (row+1)*square_size), circle_radius, color=(255, 255, 255), thickness=-1) # draw the stone
         
