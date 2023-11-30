@@ -7,24 +7,25 @@ import sente
 class GoGame:
 
     def __init__(self, game, board_detect, go_visual):
-        self.history = []
         self.moves = []
         self.board_detect = board_detect
-        self.current_state = []
         self.go_visual = go_visual
         self.game = game
+        self.current_player = None
 
 
-    def initialize_game(self, frame):
+    def initialize_game(self, frame, current_player): #current_player = "BLACK" or "WHITE"
+        self.moves = []
+        self.current_player = current_player
+        
         self.frame = frame
         self.board_detect.process_frame(frame)
-        # self.moves = copy.deepcopy(self.all_moves)
-        
-        # _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
-        # board = GoBoard(sgf_n)
-        
-        # return board.final_position()
-        return self.main_loop(frame)
+        self.populate_game()
+        if not self.game.get_active_player().name == current_player:
+            self.game.pss()
+
+        test = self.go_visual.final_position()
+        return test
     
     
     def main_loop(self, frame):
@@ -82,6 +83,35 @@ class GoGame:
             return
         print("no moves detected")
     
+    def populate_game(self):
+        detected_state = np.transpose(self.board_detect.get_state(), (1, 0, 2))
+        
+        black_stone_indices = np.argwhere(detected_state[:, :, 0] == 1)
+        white_stone_indices = np.argwhere(detected_state[:, :, 1] == 1)
+        
+        if len(black_stone_indices) + len(white_stone_indices) <= 1:
+            if len(black_stone_indices) == 1:
+                self.current_player = "BLACK"
+            else:
+                self.current_player = "WHITE"
+        else:
+            self.current_player = None
+        
+        for stone in black_stone_indices:
+            self.play_move(stone[0] + 1, stone[1] + 1, 1)
+            self.game.pss()
+        
+        self.game.pss()
+        
+        for stone in white_stone_indices:
+            self.play_move(stone[0] + 1, stone[1] + 1, 2)
+            self.game.pss()
+        
+        self.game.pss()
+        self.game.pss()
+            
+        
+            
     
     def get_sgf(self):
         return sente.sgf.dumps(self.game)
