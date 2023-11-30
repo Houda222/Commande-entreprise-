@@ -1,15 +1,8 @@
-<<<<<<< HEAD:UML/mySgfCopy.py
 #%%
-import numpy as np
-import cv2
-# import sgf as sgf_
-#%%
-=======
 import numpy as np
 import cv2
 
 
->>>>>>> f4a3c3c87ae728180660f831e4ea103b5cd78893:UML/GoVisual.py
 class GoVisual:
     """
     class GoVisual: 
@@ -31,7 +24,7 @@ class GoVisual:
         self.total_number_of_moves  = len(self.moves)
         self.board_size = 19
         self.current_number_of_moves = self.total_number_of_moves
-        
+        self.last_move = None
 
     def get_stones(self, moves):
         self.nb_black_stones = 0
@@ -59,7 +52,8 @@ class GoVisual:
         self.total_number_of_moves  = len(self.moves)
         extracted_moves = self.moves[:self.current_number_of_moves]
         self.get_stones(extracted_moves)
-        self.last_move = extracted_moves[-1]
+        if extracted_moves != []:
+            self.last_move = extracted_moves[-1]
     
         
     def drawBoard(self):
