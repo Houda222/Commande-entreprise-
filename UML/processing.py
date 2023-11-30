@@ -2,8 +2,6 @@ import math
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
-from mySgfCopy import GoBoard, GoSgf
-from scipy.interpolate import interp1d
 
 
 
@@ -879,14 +877,6 @@ def process_frame(model, frame):
     return moves
 
 
-def show_board(model, frame):
-    moves = process_frame(model, frame)
-    sgf_ = GoSgf('a', 'b', moves)
-    _, sgf_n = sgf_.createSgf()
-
-    board = GoBoard(sgf_n)
-    return board.final_position(), sgf_n
-
 #####################################3
 # %%
 ###################################
@@ -1016,56 +1006,4 @@ def draw_points(points, img=None, color=(0, 0, 255), thickness=3, draw=False):
     if draw:
         imshow_(img)
 
-
-def interpolate_intersections(intersections, interpolate_type='quadratic'):
-    
-    # Separate x and y coordinates for interpolation
-    x_coords, y_coords = zip(*intersections)
- 
-    # Polynomial interpolation function for x and y coordinates
-    poly_interp_x = interp1d(x_coords, y_coords, kind=interpolate_type, fill_value="extrapolate")
-    poly_interp_y = interp1d(y_coords, x_coords, kind=interpolate_type, fill_value="extrapolate")
-
-    # Determine grid bounds
-    min_x, max_x = min(x_coords), max(x_coords)
-    min_y, max_y = min(y_coords), max(y_coords)
-
-    #define the step 
-    step = 32 #change to average distance between lines
-
-    # Generate positions for all points on the grid
-    all_intersections = np.array([(x, y) for x in range(int(min_x), int(max_x) + 1, step) for y in range(int(min_y), int(max_y) + 1, step)])
-
-    return all_intersections
-
-
-# def assign_positions_grid(intersections):
-#     grid = {}
-#     step = int(600/19)
- 
-#     for i in range(0, 20):
-#         for j in range(0, 20):
-#             for intersection in intersections:
-#                 if int(step)*i+6 < intersection[0] and int(step)*(i+1)+6 > intersection[0] and int(step)*j+6 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-#                     grid[tuple(intersection)] = (i, j)
-#     return grid
-
-def assign_positions_grid(intersections):
-    grid = {}
-    step = int(600/19)
- 
-    for i in range(0, 20):
-        for j in range(0, 20):
-            for intersection in intersections:
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (i, j)
-                if int(step)*(1)+7 > intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (0, j)
-                if int(step)*19+6 < intersection[0] and int(step)*j+7 < intersection[1] and int(step)*(j+1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (19, j)
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*(1)+6 > intersection[1]:
-                    grid[tuple(intersection)] = (i, 0)
-                if int(step)*i+6 < intersection[0] and int(step)*(i+1)+7 > intersection[0] and int(step)*19+7 < intersection[1]:
-                    grid[tuple(intersection)] = (i, 19)
-    return grid
 

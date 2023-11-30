@@ -1,19 +1,18 @@
 from processing import *
+from GoVisual import *
 import copy
-from mySgfCopy import GoSgf
 import sente
 
 
 class GoGame:
 
-    def __init__(self, board_detect):
+    def __init__(self, game, board_detect, go_visual):
         self.history = []
         self.moves = []
         self.board_detect = board_detect
         self.current_state = []
-        self.sgf = GoSgf("p1", "p2")
-        # self.visual = GoVisual(self.sgf)
-        self.game = sente.Game()
+        self.go_visual = go_visual
+        self.game = game
 
 
     def initialize_game(self, frame):
@@ -33,12 +32,8 @@ class GoGame:
         self.board_detect.process_frame(frame)
         self.define_new_move()
         # print(len(self.moves), self.moves)
-            
-        _, sgf_n = self.sgf.createSgf(copy.deepcopy(self.moves))
-
-        board = GoBoard(sgf_n)
         
-        return board.final_position()
+        return self.go_visual.final_position()
     
     def play_move(self, x, y, stone_color):
         color = "white" if stone_color == 2 else "black"
@@ -84,6 +79,7 @@ class GoGame:
             self.moves.append(('W', (white_stone_indices[0][0], 18 - white_stone_indices[0][1])))
             return
         print("no moves detected")
+    
     
     def get_sgf(self):
         return sente.sgf.dumps(self.game)
