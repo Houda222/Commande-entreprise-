@@ -25,6 +25,7 @@ class GoVisual:
         self.board_size = 19
         self.current_number_of_moves = self.total_number_of_moves
         self.last_move = None
+        self.deleted_moves = []
 
     def get_stones(self, moves):
         self.nb_black_stones = 0
@@ -53,34 +54,45 @@ class GoVisual:
                 valid_moves.append(move)
 
         return valid_moves
-        
-    # def step_up_(self, nb_moves):
-    #     if nb_moves==-1:
-    #         removed_move = self.moves[-1]
-    #         self.game.step_up()
-    #         return removed_move
     
-    # def counter_step_up(self, nb_moves, removed_move):
-    #     if nb_moves == 1:
-    #         self.moves.append(removed_move)
-
 
     def initialize_param(self, nb_moves=0):
-        
-        if (nb_moves > 0  and self.current_number_of_moves == self.total_number_of_moves) or (nb_moves < 0 and self.current_number_of_moves==0):
-            return
        
-        self.current_number_of_moves = self.current_number_of_moves + nb_moves
-        self.moves = self.game.get_sequence()
-        self.total_number_of_moves  = len(self.moves)
-        self.board = self.game.numpy(["black_stones", "white_stones"])
-        
-        extracted_moves = self.moves[:self.current_number_of_moves]
-        extracted_moves = self.update_moves(self.board, extracted_moves)
+        self.get_stones(self.update_moves(self.game.numpy(["black_stones", "white_stones"]), self.game.get_sequence()))
 
-        self.get_stones(extracted_moves)
-        if extracted_moves != []:
-            self.last_move = extracted_moves[-1]
+        if nb_moves<0:
+            # if nb_moves == -len(self.game.get_sequence())+1:
+            #     self.deleted_moves = self.moves[nb_moves:] + self.deleted_moves
+            #     self.game.step_up(-nb_moves)
+            #     self.moves = self.game.get_sequence()
+            #     self.board = self.game.numpy(["black_stones", "white_stones"])
+            #     self.get_stones(self.update_moves(self.board, self.game.get_sequence()))
+ 
+            self.deleted_moves = self.moves[nb_moves:] + self.deleted_moves
+            self.unique_deleted_moves = []
+            for move in self.deleted_moves:
+                if move not in self.unique_deleted_moves:
+                    self.unique_deleted_moves.append(move)
+
+            self.game.step_up(-nb_moves)
+            self.moves = self.game.get_sequence()
+            self.board = self.game.numpy(["black_stones", "white_stones"])
+            self.get_stones(self.update_moves(self.board, self.game.get_sequence()))
+
+        elif nb_moves>0:
+            if len(self.deleted_moves) != 0 :
+
+                for move in self.deleted_moves[:nb_moves]:
+                    x, y, color = move.get_x()+1, move.get_y()+1, move.get_stone().name
+                    self.game.play(x,y)
+                    self.deleted_moves.pop(0)
+
+                self.board = self.game.numpy(["black_stones", "white_stones"])
+                self.moves = self.game.get_sequence()
+                self.get_stones(self.update_moves(self.board, self.moves))
+
+        if self.game.get_sequence() != []:
+            self.last_move = self.game.get_sequence()[-1]
     
         
     def drawBoard(self):
@@ -103,7 +115,8 @@ class GoVisual:
         
         #set up the board's background
         board =np.full(((self.board_size+1)*square_size, (self.board_size+1)*square_size, 3), (69, 166, 245), dtype=np.uint8)
-
+        board2 = np.zeros((self.board_size, self.board_size))
+        
         # Draw lines for the board grid
         
         # for i in range(board_size):
@@ -168,8 +181,8 @@ class GoVisual:
         numpy array
             The resulted board drawn with all the played moves 
         """
-        self.initialize_param()
-        self.current_number_of_moves = self.total_number_of_moves
+        nb_moves = len(self.moves) + len(self.deleted_moves)
+        self.initialize_param(nb_moves)
         return self.drawBoard()
 
     def current_turn(self):
@@ -209,67 +222,79 @@ class GoVisual:
         """
         self.initialize_param(1)
         return self.drawBoard()
-    
-    # def current_position(self):
-    #     self.initialize_param(1)
-    #     return self.drawBoard()
-
-    
-
-# %%
-import sente
-
-g = sente.Game()
-g.play(2,3)
-g.play(2,2)
-g.play(2,4)
-g.play(3,3)
-g.play(3,2)
-g.play(18,18)
-g.play(3,4)
-g.play(17,5)
-g.play(4,3)
-
-
-# %%
-board = GoVisual(g)
-res = board.final_position()
-cv2.imshow("result", res)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
-# %%
-previous = board.previous()
-cv2.imshow("result", previous)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 
 
 
-#%%
-next = board.next()
-cv2.imshow("result", next)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
+# # %%
+# import sente
+
+# g = sente.Game()
+# g.play(2,3)
+# g.play(2,2)
+# g.play(2,4)
+# g.play(3,3)
+# g.play(3,2)
+# g.play(18,18)
+# g.play(3,4)
+# g.play(17,5)
+# g.play(4,3)
 
 
-#%%
-next = board.next()
-cv2.imshow("result", next)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 
-# %%
-init = board.initial_position()
-cv2.imshow("result", init)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# # %%
+# board = GoVisual(g)
+# res = board.final_position()
+# cv2.imshow("result", res)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
-# %%
-next = board.next()
-cv2.imshow("result", next)
 
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
+# # %%
+# previous = board.previous()
+# cv2.imshow("result", previous)
+
+# cv2.waitKey(0)
+
+
+# cv2.destroyAllWindows()
+
+
+
+# #%%
+# next = board.next()
+# cv2.imshow("result", next)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+
+# #%%
+# next = board.next()
+# cv2.imshow("result", next)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+# # %%
+# init = board.initial_position()
+# cv2.imshow("result", init)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+# # %%
+# next = board.next()
+# cv2.imshow("result", next)
+
+
+
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+# # %%
+# res = board.final_position()
+# cv2.imshow("result", res)
+# cv2.waitKey(0)
+
+# cv2.destroyAllWindows()
+# # %%
+
 # %%
