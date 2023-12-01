@@ -1,5 +1,6 @@
-from utils import *
-import copy
+from utils_ import *
+import math, copy
+
 
 
 class GoBoard:
@@ -55,11 +56,11 @@ class GoBoard:
         if len(cluster_1) != 19 or len(cluster_2) != 19:
             raise Exception(f"Incorrect number of lines was detected: {len(cluster_1)} vertical lines and {len(cluster_2)} horizontal lines")
         
-        # img = np.copy(self.transformed_image)
-        draw_lines(cluster_1, self.transformed_image)
-        # img = np.copy(self.transformed_image)
-        draw_lines(cluster_2, self.transformed_image)
-        # imshow_(img)
+        # # img = np.copy(self.transformed_image)
+        # draw_lines(cluster_1, self.transformed_image)
+        # # img = np.copy(self.transformed_image)
+        # draw_lines(cluster_2, self.transformed_image)
+        # # imshow_(img)
         
         intersections = detect_intersections(cluster_1, cluster_2, self.transformed_image)
                 
