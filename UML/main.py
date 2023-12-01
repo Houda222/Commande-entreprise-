@@ -14,9 +14,10 @@ def processing_thread():
     initialized = False
     while Process:
         if not ProcessFrame is None:
+            pass
             try:
                 if not initialized:
-                    game_plot = game.initialize_game(ProcessFrame)
+                    game_plot, sgf_text = game.initialize_game(ProcessFrame)
                     initialized = True
                 else:
                     
@@ -51,8 +52,14 @@ def processing_thread():
                 # with open('error_logs/error_log.txt', 'w') as log_file:
                 #     log_file.write(str(exception_info))
                 # cv2.imwrite(f"{e}.jpg", ProcessFrame)
-                
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        
+
+        key_pressed = cv2.waitKey(1) & 0xFF
+        
+        if key_pressed == ord('p'):
+            print("button pressed")
+
+        if key_pressed == ord('q'):
             Process = False
             break  # Break the loop if 'q' is pressed
 
@@ -82,7 +89,12 @@ while cap.isOpened():
     
     cv2.imshow('Video Stream', frame)
     
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    key_pressed = cv2.waitKey(1) & 0xFF
+    
+    # if key_pressed == ord('p'):
+    #     print("button pressed")
+    
+    if key_pressed == ord('q'):
         Process = False
         break 
 
