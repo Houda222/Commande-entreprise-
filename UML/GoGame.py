@@ -1,6 +1,4 @@
-from processing import *
 from GoVisual import *
-import copy
 import sente
 
 
