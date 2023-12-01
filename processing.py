@@ -1,8 +1,9 @@
+# %%
 import math
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
-from mySgfCopy import GoBoard, GoSgf
+from mySgfCopy import GoVisual, GoSgf
 from scipy.interpolate import interp1d
 
 
@@ -1151,3 +1152,67 @@ def get_adjacent_empty_positions(board, position):
 
 # result = is_stone_captured(sgf_file_path, move_number_to_check, stone_coordinate_to_check)
 # print(f"Is stone captured? {result}")
+
+# %%
+
+################################################################
+
+# import time
+# img_path = "1.jpg"
+
+
+# frame = cv2.imread(img_path)
+# t1 = time.time()
+# print("processing frame")
+# results = model(frame)
+
+# annotated_frame = results[0].plot(labels=False, conf=False)
+# # imshow_(annotated_frame)
+# input_points = get_big_corners(results)
+
+# output_edge = 660
+# output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
+
+# perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
+# transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
+# # imshow_(transformed_image)
+# print("Reprocessing frame")
+# results = model(transformed_image)
+# annotated_frame = results[0].plot(labels=False, conf=False)
+# # imshow_(annotated_frame)
+# input_points = get_corners(results)
+
+# output_edge = 600
+# output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
+
+# perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
+# transformed_image = cv2.warpPerspective(transformed_image, perspective_matrix, (output_edge, output_edge))
+# print("done", time.time() - t1)
+# imshow_(transformed_image)
+
+# empty_intersections = results[0].boxes.xywh[results[0].boxes.cls == 3]
+# empty_corner = results[0].boxes.xywh[results[0].boxes.cls == 4]
+# empty_edge = results[0].boxes.xywh[results[0].boxes.cls == 5]
+# print(len(empty_intersections), len(empty_corner), len(empty_edge))
+
+
+
+
+# frame = cv2.imread(img_path)
+# results = model(frame)
+# annotated_frame = results[0].plot(labels=False, conf=False)
+# imshow_(annotated_frame)
+# input_points = get_corners(results)
+
+# output_edge = 600
+# output_points = np.array([[0, 0], [output_edge, 0], [output_edge, output_edge], [0, output_edge]], dtype=np.float32)
+
+# perspective_matrix = cv2.getPerspectiveTransform(input_points, output_points)
+# transformed_image = cv2.warpPerspective(frame, perspective_matrix, (output_edge, output_edge))
+# imshow_(transformed_image)
+
+
+# empty_intersections = results[0].boxes.xywh[results[0].boxes.cls == 3]
+# empty_corner = results[0].boxes.xywh[results[0].boxes.cls == 4]
+# empty_edge = results[0].boxes.xywh[results[0].boxes.cls == 5]
+# print(len(empty_intersections), len(empty_corner), len(empty_edge))
