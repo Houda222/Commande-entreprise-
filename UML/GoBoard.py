@@ -38,8 +38,8 @@ class GoBoard:
         vertical_lines = removeDuplicates(vertical_lines)
         horizontal_lines = removeDuplicates(horizontal_lines)
         
-        vertical_lines = restore_missing_lines(vertical_lines)
-        horizontal_lines = restore_missing_lines(horizontal_lines)
+        vertical_lines = restore_and_remove_lines(vertical_lines)
+        horizontal_lines = restore_and_remove_lines(horizontal_lines)
 
         vertical_lines = add_lines_in_the_edges(vertical_lines, "vertical")
         horizontal_lines = add_lines_in_the_edges(horizontal_lines, "horizontal")
@@ -73,7 +73,7 @@ class GoBoard:
 
     def assign_stones(self, white_stones_transf, black_stones_transf, transformed_intersections):
         
-        self.map = create_board(transformed_intersections)
+        self.map = map_intersections(transformed_intersections)
         self.state = np.zeros((19, 19, 2))
         
         for stone in white_stones_transf:

@@ -76,55 +76,74 @@ def are_similar(line1, line2, threshold=10):
     return np.all(np.abs(line1 - line2) <= threshold)
 
 
-def removeDuplicates(lines):
-    """
-    Group similar lines and take the average of each group to keep one line per group
+# def removeDuplicates(lines):
+#     """
+#     Group similar lines and take the average of each group to keep one line per group
 
-    Args:
-    -----------
-    lines: list
-        list of lines to be filtered
+#     Args:
+#     -----------
+#     lines: list
+#         list of lines to be filtered
     
-    Returns:
-    --------
-    numpy.ndarray
-        filtered list of lines   
-    """
+#     Returns:
+#     --------
+#     numpy.ndarray
+#         filtered list of lines   
+#     """
+#     grouped_lines = {}
+#     for line in lines:
+#         x1, y1, x2, y2 = line
+#         found = False
+#         for key in grouped_lines.keys():
+#             for element in grouped_lines[key]:
+#                 if are_similar(element, line, threshold=15):
+#                     grouped_lines[key] = grouped_lines[key] + [line]
+#                     found = True
+#                     break
+#         if not found:
+#             grouped_lines[(x1, y1, x2, y2)] = [line]
+
+#     final_lines2 = []
+#     second_dict = {}
+#     for key in grouped_lines.keys():
+#         mean_line = np.mean(grouped_lines[key], axis=0).astype(dtype=int)
+#         final_lines2.append(mean_line)
+#         second_dict[tuple(mean_line)] = [mean_line]
+    
+#     for line in lines:
+#         x1, y1, x2, y2 = line
+#         found = False
+#         for key in second_dict.keys():
+#             if are_similar(key, line, threshold=5):
+#                 second_dict[key] = second_dict[key] + [line]
+#                 found = True
+#                 break
+            
+#     final_lines = []
+#     for key in second_dict.keys():
+#         mean_line = np.mean(second_dict[key], axis=0).astype(dtype=int)
+#         final_lines.append(mean_line)
+    
+#     return np.array(final_lines).astype(np.int32)
+
+def removeDuplicates(lines):
     grouped_lines = {}
     for line in lines:
         x1, y1, x2, y2 = line
         found = False
         for key in grouped_lines.keys():
-            for element in grouped_lines[key]:
-                if are_similar(element, line, threshold=15):
-                    grouped_lines[key] = grouped_lines[key] + [line]
-                    found = True
-                    break
+            if are_similar(key, line):
+                grouped_lines[key] = grouped_lines[key] + [line]
+                found = True
+                break
         if not found:
             grouped_lines[(x1, y1, x2, y2)] = [line]
 
-    final_lines2 = []
-    second_dict = {}
-    for key in grouped_lines.keys():
-        mean_line = np.mean(grouped_lines[key], axis=0).astype(dtype=int)
-        final_lines2.append(mean_line)
-        second_dict[tuple(mean_line)] = [mean_line]
-    
-    for line in lines:
-        x1, y1, x2, y2 = line
-        found = False
-        for key in second_dict.keys():
-            if are_similar(key, line, threshold=5):
-                second_dict[key] = second_dict[key] + [line]
-                found = True
-                break
-            
     final_lines = []
-    for key in second_dict.keys():
-        mean_line = np.mean(second_dict[key], axis=0).astype(dtype=int)
-        final_lines.append(mean_line)
+    for key in grouped_lines.keys():
+        final_lines.append(np.mean(grouped_lines[key], axis=0))
     
-    return np.array(final_lines).astype(np.int32)
+    return np.array(final_lines).astype(int)
 
 
 def is_vertical(x1, y1, x2, y2):
@@ -179,7 +198,7 @@ def intersect(line1, line2):
     return np.array([int(np.round(x)), int(np.round(y))])
 
 
-def create_board(intersections, board_size=19):
+def map_intersections(intersections, board_size=19):
     """
     Set up the board with 19x19=361 intersections 
 
@@ -323,27 +342,60 @@ def is_approx_multiple(value, base, threshold):
 
     # return abs(value - math.floor(value / base) * base) < threshold
 
-def restore_missing_lines(lines, distance_threshold=10):
+def restore_and_remove_lines(lines, distance_threshold=10):
+    """
+    Restore missing lines in a set of line segments based on a common spacing,
+    and remove lines that do not conform to the common spacing.
+
+    Args:
+    -----------
+    lines : numpy.ndarray
+        An array representing line segments. Each row should contain four elements: [x1, y1, x2, y2].
+
+    distance_threshold : float, optional (default=10)
+        The maximum allowed deviation from the common spacing when identifying missing lines.
+
+    Returns:
+    --------
+    numpy.ndarray
+        An array representing the lines with missing segments restored and non-conforming lines removed.
+
+    Notes:
+    ------
+    The function assumes that the input lines are sorted based on the y-axis (vertical lines) or x-axis (horizontal lines).
+
+    The common spacing is calculated based on the mean distance between consecutive lines.
+    Missing lines are added to bridge the gaps, and lines that deviate from the common spacing are removed.
+
+    The function supports both horizontal and vertical lines.
+
+    """
+    
     # ax=0 : x axis / ax=1 : y axis
     lines = np.sort(lines, axis=0)
+    
+    # Calculate distances between consecutive lines
     distances = calculate_distances(lines)
+    
+    # If there are only one or fewer lines, no restoration is needed
     if len(distances) <= 1:
         return lines
+    
+    # Find the common distance and update the distances array
     mean_distance, distances = find_common_distance(distances)
     
     restored_lines = []
     
     i = 0
     while i < len(lines) - 1:
-        # print(i, lines)
-        
+        # Calculate spacing between consecutive lines
         spacing = (np.linalg.norm(lines[i + 1][:2]-lines[i][:2]) + np.linalg.norm(lines[i + 1][2:]-lines[i][2:]))/2
-        # print(spacing, mean_distance)
+        
+        # Check if spacing is approximately a multiple of the mean distance
         if is_approx_multiple(spacing, mean_distance, distance_threshold):
-            # print("aprrox_multi")
+            # If spacing is greater than or equal to the mean distance, restore missing lines
             if spacing >= mean_distance:
                 num_missing_lines = round(spacing / mean_distance) - 1
-                # print("big spacing", num_missing_lines)
                 for j in range(1, num_missing_lines + 1):
                     if is_vertical(*lines[i]):
                         x1 = lines[i][0] + j * mean_distance
@@ -357,16 +409,15 @@ def restore_missing_lines(lines, distance_threshold=10):
                         y2 = lines[i][3] + j * mean_distance
                     restored_lines.append([x1, y1, x2, y2])
         else:
-            # print("deleting", spacing, mean_distance)
+            # If spacing is not a multiple, remove the next line
             lines = np.delete(lines, i+1, axis=0)
             i -= 1
         i += 1
   
-  
+    # Append the restored lines to the original array
     if len(restored_lines) != 0:
         lines = np.append(lines, np.array(restored_lines, dtype=int), axis=0)
     
-    # Sort the lines array
     lines = np.sort(lines, axis=0)
     
     return lines
@@ -578,17 +629,34 @@ def lines_detection(model_results, perspective_matrix):
  
     return np.array(cluster_vertical).reshape((-1, 4)), np.array(cluster_horizontal).reshape((-1, 4))
     
-def are_corner_inside_box(corner_boxes, board_box):
-    
+def get_corners_inside_box(corners_boxes, board_box):
+    """
+    Check if any corner of a set of boxes is inside another bounding box.
+
+    Args:
+    -----------
+    corners_boxes : numpy.ndarray
+        An array representing corners of boxes. Each row should contain four elements: [x1, y1, x2, y2].
+
+    board_box : tuple
+        A tuple representing the bounding box coordinates (x1, y1, x2, y2) to check against.
+
+    Returns:
+    --------
+    numpy.ndarray
+        An array containing corners that are inside the specified bounding box.
+
+    """
+        
     x1, y1, x2, y2 = board_box
 
     # Extract the coordinates of the squares
-    square_x1 = corner_boxes[:, 0]
-    square_y1 = corner_boxes[:, 1]
-    square_x2 = corner_boxes[:, 2]
-    square_y2 = corner_boxes[:, 3]
+    square_x1 = corners_boxes[:, 0]
+    square_y1 = corners_boxes[:, 1]
+    square_x2 = corners_boxes[:, 2]
+    square_y2 = corners_boxes[:, 3]
 
-    # Check if any corner of the corner_boxes is inside the board_box
+    # Check if any corner of the corners_boxes is inside the board_box
     condition = (
         ((square_x1 >= x1) & (square_x1 <= x2) & (square_y1 >= y1) & (square_y1 <= y2)) |
         ((square_x2 >= x1) & (square_x2 <= x2) & (square_y1 >= y1) & (square_y1 <= y2)) |
@@ -596,29 +664,54 @@ def are_corner_inside_box(corner_boxes, board_box):
         ((square_x2 >= x1) & (square_x2 <= x2) & (square_y2 >= y1) & (square_y2 <= y2))
     )
 
-    # Select corner_boxes that meet the condition
-    return corner_boxes[condition]
+    # Select corners_boxes that meet the condition
+    return corners_boxes[condition]
         
-def get_corners(results):    
-    corner_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
+def get_corners(results):
+    """
+    Extract and arrange four corners from object detection results.
+
+    Args:
+    -----------
+    results : list
+        A list containing object detection results.
+
+    Returns:
+    --------
+    numpy.ndarray
+        An array containing four corners of the board arranged in a specific order.
+
+    Raises:
+    -------
+    Exception
+        Raised when an incorrect number of corners is detected.
+
+    Notes:
+    ------
+    The function extracts corners from the object detection results.
+    It then performs non-maximum suppression to remove redundant corners, ensuring only distinct corners are considered.
+    The corners are further filtered to only include those inside the board box.
+    Finally, the four corners are arranged in a specific order to form a coherent representation.
+
+    """
     
-    if len(corner_boxes) < 4:
-        raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners")
+    corners_boxes = np.array(results[0].boxes.xyxy[results[0].boxes.cls == 2])
+    
+    if len(corners_boxes) < 4:
+        raise Exception(f">>>>Incorrect number of corners! Detected {len(corners_boxes)} corners")
 
 
-    corner_boxes_ = non_max_suppression(corner_boxes)
-    # corner_boxes_ = ultralytics.utils.ops.non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, multi_label=False, labels=(), max_det=300, nc=0, max_time_img=0.05, max_nms=30000, max_wh=7680)
-    
+    corners_boxes_ = non_max_suppression(corners_boxes)
+
     board_model_edges = results[0].boxes.xyxy[results[0].boxes.cls == 1][0]
     
-    corner_boxes = are_corner_inside_box(corner_boxes_, np.array(board_model_edges))
+    corners_boxes = get_corners_inside_box(corners_boxes_, np.array(board_model_edges))
 
-    if len(corner_boxes) != 4:
-        raise Exception(f">>>>Incorrect number of corners! Detected {len(corner_boxes)} corners and {len(corner_boxes_)} corners with NMS")
+    if len(corners_boxes) != 4:
+        raise Exception(f">>>>Incorrect number of corners! Detected {len(corners_boxes)} corners and {len(corners_boxes_)} corners with NMS")
 
-    corner_centers = ((corner_boxes[:,[0, 1]] + corner_boxes[:,[2, 3]])/2)
-    # corner_centers = corner_centers
-    
+    corner_centers = ((corners_boxes[:,[0, 1]] + corners_boxes[:,[2, 3]])/2)
+
     corner_centers = corner_centers[corner_centers[:, 1].argsort()]
     
     upper = corner_centers[:2]
@@ -705,7 +798,6 @@ def add_lines_in_the_edges(lines, type):
     
     
 def line_distance(line1, line2):
-   x11, y11, x21, y21 = line1
    return (np.linalg.norm(line1[:2]-line2[:2]) + np.linalg.norm(line1[2:]-line2[2:])) / 2
 
 
@@ -716,4 +808,3 @@ def average_distance(lines):
     distances = [line_distance(lines[i + 1], lines[i]) for i in range(len(lines) - 1)]
     mean_distance = np.average(distances)
     return mean_distance
-
