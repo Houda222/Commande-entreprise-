@@ -111,6 +111,3 @@ class GoBoard:
             # cv2.putText(self.transformed_image, f"{(self.map[nearest_corner])}", nearest_corner, fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL , fontScale=0.5, color=(0,0,255))
         
         # imshow_(self.transformed_image)
-
-
-
