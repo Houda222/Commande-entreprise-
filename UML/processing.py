@@ -1,55 +1,7 @@
-import math
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN
 
-
-
-def interpolate(x1, y1, x2, y2, image_width=600, image_height=600):
-    """
-    Stretch a line to fit the whole image using the line equation y = slope * x + b
-
-    Args:
-    -----------
-    x1: float
-        The start point of the line in X direction
-    y1: float
-        The start point of the line in Y direction
-    x2: float
-        The end point of the line in X direction
-    y2: float
-        The end point of the line in Y direction
-    image_width: int
-        Width of the image (default is 600)
-    image_height: int
-        Height of the image (default is 600)
-    
-    Returns:
-    --------
-    numpy.ndarray
-        new calculated endpoints 
-    """
-
-    slope, b = line_equation(x1, y1, x2, y2)
-    if slope == float('Inf'):
-        new_endpoints = np.array([x1, 0, x1, image_height], dtype=np.uint32)
-    elif slope == 0:
-        new_endpoints = np.array([0, y1, image_width, y1], dtype=np.uint32)
-    else:
-        left_bound = (0, np.round(b))
-        right_bound = (image_width, np.round(slope * image_width + b))
-        upper_bound = (np.round(-b/slope), 0)
-        lower_bound = (np.round((image_height - b) / slope), image_height)
-        possible_bounds = {left_bound, right_bound, upper_bound, lower_bound}
-
-        new_endpoints = np.array([], dtype=np.uint32)
-        for bound in possible_bounds:
-            x, y = bound
-            if x > image_width or x < 0 or y < 0 or y > image_height:
-                continue
-            new_endpoints = np.append(new_endpoints, (x, y))
-
-    return new_endpoints
 
 def line_equation(x1, y1, x2, y2):
     """
@@ -226,115 +178,8 @@ def intersect(line1, line2):
         y = slope1 * x + b1
     return np.array([int(np.round(x)), int(np.round(y))])
 
-def get_angle(x1, y1, x2, y2):
-    """
-    Calculate the angle in radian of the segment in the trigonometric circle
 
-    Args:
-    -----------
-    x1: float
-        The start point of the line in X direction
-    y1: float
-        The start point of the line in Y direction
-    x2: float
-        The end point of the line in X direction
-    y2: float
-        The end point of the line in Y direction
-
-    Returns:
-    --------
-    float
-        Angle in radians
-    """
-    if x1 != x2:
-        angle = np.arctan((y2 - y1)/(x2 - x1))
-    else:
-        angle = math.pi / 2
-    return angle
-
-
-def clean_lines(lines, image_width, image_height):
-    """
-    Clean lines by removing duplicates and stretching short lines
-
-    Args:
-    -----------
-    lines: numpy.ndarray
-        List of lines to be cleaned
-    image_width: int
-        width of the image
-    image_height: int
-
-    Returns:
-    --------
-    numpy.ndarray
-        filtered list of lines   
-    """   
-    
-    for i in range(len(lines)):
-        lines[i] = interpolate(*lines[i], image_width, image_height)
-        
-    lines = adress_lines(lines)
-    return removeDuplicates(lines)
-
-def get_angles(lines):
-    """
-    Calculate the angle in radian for each line
-
-    Args:
-    -----------
-    lines: list
-        List of lines of which we calculate the angles
-
-    Returns:
-    --------
-    numpy.ndarray
-        List of angles in radians
-    """
-
-    lines_angles = np.zeros((lines.shape[0], 1))
-    for i in range(len(lines)):
-        lines_angles[i] = get_angle(*lines[i])
-    return lines_angles
-
-def cluster_orientation(lines):
-    """
-    Classify lines into horizontal and vertical lines using Kmeans clustering algorithm
-
-    Args:
-    -----------
-    lines: list
-        list of lines to be classified
-
-    Returns:
-    --------
-    list
-        horizontal or vertical lines
-    list
-        horizontal if first list is vertical, else vertical
-        
-    """
-
-    lines_angles = get_angles(lines)
-    
-    stretched_angles = lines_angles * 2
-    angle_space = np.column_stack((np.cos(stretched_angles), np.sin(stretched_angles)))
-
-    num_clusters = 2
-
-    # Apply K-means clustering
-    kmeans = KMeans(n_clusters=num_clusters, n_init=10)
-    kmeans.fit(angle_space)
-
-    # Get the cluster labels for each line
-    cluster_labels = kmeans.labels_
-
-    # Separate lines into two clusters based on cluster labels
-    cluster_1 = lines[cluster_labels == 0]
-    cluster_2 = lines[cluster_labels == 1]
-    return cluster_1, cluster_2
-
-def create_board(intersections, board_size=(19,19)):
+def create_board(intersections, board_size=19):
     """
     Set up the board with 19x19=361 intersections 
 
@@ -357,16 +202,13 @@ def create_board(intersections, board_size=(19,19)):
     cleaned_intersections = cleaned_intersections.tolist()
     
     board = {}
-    for j in range(0, 19):
-        row = cleaned_intersections[:19]
-        cleaned_intersections = cleaned_intersections[19:]
+    for j in range(0, board_size):
+        row = cleaned_intersections[:board_size]
+        cleaned_intersections = cleaned_intersections[board_size:]
         row.sort(key=lambda x: x[0])
-        # print(row)
-        for i in range(19):
+        for i in range(board_size):
             if len(row) != 0:
-                el = tuple(row.pop(0))
-                board[el] = (i, j)
-                # print(el, (i, j))
+                board[tuple(row.pop(0))] = (i, j)
     
     return board
 
@@ -799,10 +641,6 @@ def get_key_points(results, class_, perspective_matrix, output_edge=600):
     return key_points
 
 
-#####################################3
-# %%
-###################################
-
 def add_lines_in_the_edges(lines, type):
     mean_distance = average_distance(lines)
     # print(mean_distance)
@@ -865,8 +703,7 @@ def add_lines_in_the_edges(lines, type):
 
     return lines.astype(int)
     
-
-
+    
 def line_distance(line1, line2):
    x11, y11, x21, y21 = line1
    return (np.linalg.norm(line1[:2]-line2[:2]) + np.linalg.norm(line1[2:]-line2[2:])) / 2
@@ -879,53 +716,4 @@ def average_distance(lines):
     distances = [line_distance(lines[i + 1], lines[i]) for i in range(len(lines) - 1)]
     mean_distance = np.average(distances)
     return mean_distance
-
-# %%
-
-
-
-def imshow_(image):
-    screen_width, screen_height = 1920, 1080  # Replace with your screen resolution or use a library to detect it dynamically
-
-    # Calculate the scaling factors for width and height
-    width_scale = screen_width / float(image.shape[1])
-    height_scale = screen_height / float(image.shape[0])
-
-    # Choose the smaller scaling factor to fit the image within the screen dimensions
-    scale = min(width_scale, height_scale)
-
-    # Resize the image with the calculated scale
-    resized_image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-
-    # Get the dimensions of the resized image
-    window_width, window_height = resized_image.shape[1], resized_image.shape[0]
-
-    # Create a window with the determined size
-    cv2.namedWindow('img', cv2.WINDOW_KEEPRATIO)
-    # cv2.resizeWindow('img', window_width, window_height)
-    cv2.imshow('img', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    
-
-def draw_lines(lines, img=None, color=(0, 0, 255), thickness=1, draw=False):
-    global image
-    if img is None:
-        img = np.zeros_like(image)
-    for line in lines:
-        x1, y1, x2, y2 = line
-        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
-    if draw:
-        imshow_(img)
-
-
-def draw_points(points, img=None, color=(0, 0, 255), thickness=3, draw=False):
-    global image
-    if img is None:
-        img = np.zeros_like(image)
-    for point in points:
-        cv2.circle(img, point, 3, color, thickness)
-    if draw:
-        imshow_(img)
-
 
