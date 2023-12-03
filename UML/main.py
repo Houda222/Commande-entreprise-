@@ -25,7 +25,7 @@ def processing_thread():
                 ############ B LE CODE DYAL HOUDA;
                 ############ O sgf_filename HOWA LE NOM DYAL LE FICHER SGF LLI T ENREGISTRA 
                 ############ QUI CORRESPOND A game_plot
-                    game_plot = game.main_loop(ProcessFrame)
+                    game_plot, sgf_text = game.main_loop(ProcessFrame)
                 # game_plot, sgf_filename = show_board(model, ProcessFrame)
                 cv2.imshow("master", game_plot)
                 # cv2.imshow("annotated", game.annotated_frame)
