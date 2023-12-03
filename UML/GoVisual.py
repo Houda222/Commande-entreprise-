@@ -81,10 +81,11 @@ class GoVisual:
         elif nb_moves>0:
             if len(self.deleted_moves) != 0 :
 
-                for move in self.deleted_moves[:nb_moves]:
+                while nb_moves > 0:
+                    move = self.deleted_moves.pop(0)
                     x, y, color = move.get_x()+1, move.get_y()+1, move.get_stone().name
                     self.game.play(x,y)
-                    self.deleted_moves.pop(0)
+                    nb_moves -= 1
 
                 self.board = self.game.numpy(["black_stones", "white_stones"])
                 self.moves = self.get_moves()
